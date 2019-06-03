@@ -1,0 +1,38 @@
+{
+  "name": "pastry-cli",
+  "version": "1.0.2",
+  "description": "Node CLI for effectively pasting template files/directories",
+  "main": "bin/pastry-cli",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "pastry": "bin/pastry",
+    "pastry-cli": "bin/pastry",
+    "@saschamz/pastry-cli": "bin/pastry"
+  },
+  "homepage": "https://github.com/Saschamz/pastry-cli",
+  "author": "Sascha Ringström",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Saschamz/pastry-cli.git"
+  },
+  "keywords": [
+    "cli",
+    "template",
+    "blueprint",
+    "paste",
+    "pastry",
+    "reuse"
+  ],
+  "dependencies": {
+    "arg": "^4.1.0",
+    "chalk": "^2.4.2",
+    "esm": "^3.2.25",
+    "inquirer": "^6.3.1",
+    "inquirer-fuzzy-path": "^2.0.3",
+    "ncp": "^2.0.0",
+    "replace-in-file": "^4.1.0"
+  }
+}
