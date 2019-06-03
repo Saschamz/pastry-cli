@@ -1,25 +1,21 @@
 import chalk from 'chalk'
-import fs from 'fs'
-import ncp from 'ncp'
-import { promisify } from 'util'
 import replace from 'replace-in-file'
 
-const readdirSync = promisify(fs.readdir)
-const copy = promisify(ncp)
-const rename = promisify(fs.rename)
-const stats = promisify(fs.stat)
+import { copy, readdir, rename, stats } from './promisified'
+import { userConfig } from './options'
 
 export async function getTemplates() {
   try {
-    const templateDir = process.cwd() + '/blueprints'
-    const templates = await readdirSync(templateDir)
+    const templateDirPath = `${process.cwd()}/${userConfig.templateDir}`
+    const templates = await readdir(templateDirPath)
     if (!templates.length) throw Error
     return templates
   } catch (err) {
     console.error(
-      chalk.red.bold(
-        'ERROR: Could not find directory OR files inside of directory /blueprints\n'
-      )
+      chalk.red.bold('🎂 ERROR'),
+      `Could not find directory OR files inside of directory ${
+        userConfig.templateDir
+      }`
     )
     process.exit(1)
   }
@@ -30,8 +26,11 @@ export async function copyTemplate({
   template_rename,
   copy_path_affix
 }) {
-  const templatePath = process.cwd() + '/blueprints/' + template_name
-  const copyPath = process.cwd() + '/' + copy_path_affix + '/' + template_rename
+  const templatePath = `${process.cwd()}/${
+    userConfig.templateDir
+  }/${template_name}`
+  const copyPath = `${process.cwd()}/${copy_path_affix}/${template_rename}`
+
   await copy(templatePath, copyPath, { clobber: false })
   return copyPath
 }
@@ -52,7 +51,7 @@ export async function renameFiles({ template_rename, path }) {
 const getNestedFilePaths = function(dir, filelist) {
   var path = path || require('path')
   var fs = fs || require('fs'),
-    files = fs.readdirSync(dir)
+    files = fs.readdir(dir)
   filelist = filelist || []
   files.forEach(function(file) {
     if (fs.statSync(path.join(dir, file)).isDirectory()) {
