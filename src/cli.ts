@@ -9,9 +9,12 @@ inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'))
 
 import {
   getTemplates,
-  copyTemplate,
   renameFiles,
-  getTemplateOptionals
+  getTemplateOptionals,
+  calculateAnswers,
+  copyTemplateToTemporaryPath,
+  copyTemplateToFinalpath,
+  createOrRemoveTempDir
 } from './main'
 
 export async function cli(rawArgs) {
@@ -26,21 +29,26 @@ export async function cli(rawArgs) {
   if (!options.copy_path_affix) prompts.push(questions.copy_path_affix)
 
   const answersFromPrompt = await inquirer.prompt(prompts)
-  const answers = { ...options, ...answersFromPrompt }
+  const answers = calculateAnswers(options, answersFromPrompt)
 
-  const path = await copyTemplate(answers)
-  await renameFiles({ ...answers, path })
+  await createOrRemoveTempDir()
+  await copyTemplateToTemporaryPath(answers)
 
-  const availableTemplateVariants = await getTemplateOptionals(path)
-  const { selected_variants } = await inquirer.prompt(
-    questions.selected_variants(availableTemplateVariants)
-  )
-  const variantsToRemove = availableTemplateVariants.filter(
-    variant => !selected_variants.includes(variant)
-  )
+  const availableTemplateVariants = await getTemplateOptionals(answers)
+  let variantsToRemove = []
 
-  console.log('selected_variants', selected_variants)
-  console.log('variantsToRemove', variantsToRemove)
+  if (availableTemplateVariants.length) {
+    const { selected_variants } = await inquirer.prompt(
+      questions.selected_variants(availableTemplateVariants)
+    )
+    variantsToRemove = availableTemplateVariants.filter(
+      variant => !selected_variants.includes(variant)
+    )
+  }
+
+  await renameFiles(answers, variantsToRemove)
+  await copyTemplateToFinalpath(answers)
+  await createOrRemoveTempDir()
 
   console.log(chalk.greenBright(`🎂 Pasted ${answers.template_rename}!`))
 }

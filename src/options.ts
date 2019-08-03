@@ -1,12 +1,15 @@
 import arg from 'arg'
 
+export interface IUserConfig {
+  templateDirPath: string
+}
+
 export const userConfig = getUserConfig()
 
-function getUserConfig() {
+function getUserConfig(): IUserConfig {
   try {
     const config = require(`${process.cwd()}/.pastryconfig.json`)
     return {
-      templateDir: config.templateDir || 'pastries',
       templateDirPath: process.cwd() + '/' + (config.templateDir || 'pastries')
     }
   } catch (err) {

@@ -14,6 +14,17 @@ Install either to your project `npm i pastry-cli` or globally `npm i -g pastry-c
 
 The cli will guide you through the rest of the steps.
 
+## Template Optionals
+
+With optional template code you will get prompted to select which variants you would like to utilize.
+For example:
+
+```javascript
+// pastry-start log
+console.log('I may be part of the file, yay!')
+// pastry-end log
+```
+
 ## Available Arguments
 
 `-n | --name` define the new name
