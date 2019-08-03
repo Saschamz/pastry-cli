@@ -18,9 +18,10 @@ export default {
     name: 'copy_path_affix',
     message: 'Select target directory'
   },
-  selected_variants: {
-    type: 'option',
+  selected_variants: choices => ({
     name: 'selected_variants',
-    message: 'Select variants'
-  }
+    type: 'checkbox',
+    choices,
+    message: 'Please select your variants'
+  })
 }

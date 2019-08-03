@@ -6,11 +6,12 @@ function getUserConfig() {
   try {
     const config = require(`${process.cwd()}/.pastryconfig.json`)
     return {
-      templateDir: config.templateDir || 'pastries'
+      templateDir: config.templateDir || 'pastries',
+      templateDirPath: process.cwd() + '/' + (config.templateDir || 'pastries')
     }
   } catch (err) {
     return {
-      templateDir: 'pastries'
+      templateDirPath: process.cwd() + '/pastries'
     }
   }
 }
