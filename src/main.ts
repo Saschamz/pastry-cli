@@ -2,20 +2,27 @@ import chalk from 'chalk'
 import replace from 'replace-in-file'
 import findInFiles from 'find-in-files'
 
-import { copy, readdir, rename, stats, mkdir } from './promisified'
+import {
+  copy,
+  readdir,
+  rename,
+  stats,
+  mkdir,
+  exists,
+  rmdir
+} from './promisified'
 import { userConfig } from './options'
 
 export async function getTemplates() {
   try {
-    const templateDirPath = `${process.cwd()}/${userConfig.templateDir}`
-    const templates = await readdir(templateDirPath)
+    const templates = await readdir(userConfig.templateDirPath)
     if (!templates.length) throw Error
     return templates
   } catch (err) {
     console.error(
       chalk.red.bold('🎂 ERROR'),
       `Could not find directory OR files inside of directory ${
-        userConfig.templateDir
+        userConfig.templateDirPath
       }`
     )
     process.exit(1)
@@ -27,9 +34,8 @@ export async function copyTemplate({
   template_rename,
   copy_path_affix
 }) {
-  const templatePath = `${process.cwd()}/${
-    userConfig.templateDir
-  }/${template_name}`
+  // TODO: create temp directory
+  const templatePath = `${userConfig.templateDirPath}/${template_name}`
   let fileExtension = template_name.split('.')
   fileExtension =
     fileExtension.length === 1
@@ -54,7 +60,7 @@ export async function renameFiles({ template_rename, path }) {
   )
 }
 
-const getNestedFilePaths = async function(dir, filelist) {
+const getNestedFilePaths = async function(dir, filelist?: any) {
   var path = path || require('path')
   var fs = fs || require('fs'),
     files = await readdir(dir)
@@ -116,7 +122,8 @@ export async function getTemplateOptionals(path) {
   // console.log(massagedFiles)
 
   const lines = Object.values(files)
-    .map(file => file.line)
+    .map((file: any) => file.line)
+    //@ts-ignore
     .flat()
   const templateOptionals = lines.map(line =>
     line.split('pastry-optional:')[1].trim()

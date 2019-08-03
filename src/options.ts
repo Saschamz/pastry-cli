@@ -33,7 +33,7 @@ export function getOptions(rawArgs) {
     }
   )
 
-  if (args['--help'] > 0) {
+  if ((args['--help'] as any) > 0) {
     console.log(`
       --template | -b) Specify template name
       --path | -p) Specify new relative path

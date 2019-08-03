@@ -1,7 +1,7 @@
 import inquirer from 'inquirer'
 import chalk from 'chalk'
 
-require('./prototypes.js')
+require('./prototypes')
 import { getOptions } from './options'
 import questions from './questions'
 
