@@ -1,7 +1,7 @@
 import inquirer from 'inquirer'
 import chalk from 'chalk'
 
-require('./prototypes')
+require('./util/prototypes')
 import { getOptions } from './options'
 import questions from './questions'
 
@@ -10,12 +10,12 @@ inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'))
 import {
   getTemplates,
   renameFiles,
-  getTemplateOptionals,
-  calculateAnswers,
   copyTemplateToTemporaryPath,
   copyTemplateToFinalpath,
-  createOrRemoveTempDir
+  createOrRemoveTempDir,
+  getVariantsToRemove
 } from './main'
+import { calculateAnswers } from './answers'
 
 export async function cli(rawArgs) {
   console.log(chalk.magentaBright('🎂 Pastry'))
@@ -33,19 +33,7 @@ export async function cli(rawArgs) {
 
   await createOrRemoveTempDir()
   await copyTemplateToTemporaryPath(answers)
-
-  const availableTemplateVariants = await getTemplateOptionals(answers)
-  let variantsToRemove = []
-
-  if (availableTemplateVariants.length) {
-    const { selected_variants } = await inquirer.prompt(
-      questions.selected_variants(availableTemplateVariants)
-    )
-    variantsToRemove = availableTemplateVariants.filter(
-      variant => !selected_variants.includes(variant)
-    )
-  }
-
+  const variantsToRemove = await getVariantsToRemove(answers)
   await renameFiles(answers, variantsToRemove)
   await copyTemplateToFinalpath(answers)
   await createOrRemoveTempDir()

@@ -14,10 +14,10 @@ Install either to your project `npm i pastry-cli` or globally `npm i -g pastry-c
 
 The cli will guide you through the rest of the steps.
 
-## Template Optionals
+## Optional Snippets
 
-With optional template code you will get prompted to select which variants you would like to utilize.
-For example:
+With optional snippets you can predefine parts of code you **might** want to use in a file.
+For example this will prompt you if you want to include the `log` snippet:
 
 ```javascript
 // pastry-start log
@@ -41,6 +41,6 @@ Configuration can be done by creating a `.pastryconfig.json` in the root directo
 
 ```json
 {
-  "templateDir": "{YOUR_TEMPLATE_DIRECTORY}"
+  "templateDir": "{YOUR_TEMPLATE_DIRECTORY}" // default = pastries
 }
 ```

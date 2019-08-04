@@ -2,10 +2,14 @@ import chalk from 'chalk'
 import replace from 'replace-in-file'
 import findInFiles from 'find-in-files'
 import fsx from 'fs-extra'
+import inquirer from 'inquirer'
 
-import { copy, readdir, rename, stats, mkdir, exists } from './promisified'
+import { copy, readdir, rename, stats, mkdir, exists } from './util/promisified'
+import { sequencePromises, getOptionalSnippetRegExp } from './util/helpers'
 import { userConfig } from './options'
 import { tempDirectoryPath } from './constants'
+import questions from './questions'
+import { IAnswers } from './answers'
 
 export async function getTemplates() {
   try {
@@ -78,14 +82,9 @@ const getNestedFilePaths = async function(dir, filelist?: any) {
 }
 
 export async function removeOptional(fileName, name: string) {
-  const regExp = new RegExp(
-    `\/\/.+pastry-start.+${name}(.|\n)+\/\/.+pastry-end.+${name}`,
-    'igm'
-  )
-
   await replace({
     files: fileName,
-    from: regExp,
+    from: getOptionalSnippetRegExp(name),
     to: ''
   })
 }
@@ -100,20 +99,13 @@ export async function removeAllOptionalComments(fileName) {
   })
 }
 
-const serial = funcs =>
-  funcs.reduce(
-    (promise, func) =>
-      promise.then(result => func().then(Array.prototype.concat.bind(result))),
-    Promise.resolve([])
-  )
-
 export async function findAndReplace(path, replacement, variantsToRemove) {
   const fileName = path.replace(/PLACEHOLDER/i, replacement)
   if (path !== fileName) {
     await rename(path, fileName)
   }
 
-  await serial(
+  await sequencePromises(
     variantsToRemove.map(variant => () => removeOptional(fileName, variant))
   )
 
@@ -134,7 +126,9 @@ export async function removeFromFiles(files, regEx) {
   })
 }
 
-export async function getTemplateOptionals({ tempDirectoryPath }: IAnswers) {
+export async function getTemplateOptionals({
+  tempDirectoryPath
+}: IAnswers): Promise<string[]> {
   const files = await findInFiles.find('pastry-start', tempDirectoryPath, '.')
 
   const lines = Object.values(files)
@@ -157,43 +151,18 @@ export async function createOrRemoveTempDir() {
   fsx.removeSync(tempDirectoryPath)
 }
 
-export interface IOptions {
-  template_name: string
-  template_rename: string
-  copy_path_affix: string
-}
+export async function getVariantsToRemove(answers: IAnswers) {
+  const availableTemplateVariants = await getTemplateOptionals(answers)
+  let variantsToRemove = []
 
-export interface IAnswers extends IOptions {
-  templatePath: string
-  temporaryCopyPath: string
-  finalCopyPath: string
-  tempDirectoryPath: string
-}
-
-export function calculateAnswers(
-  options: IOptions,
-  answersFromPrompt: IOptions
-): IAnswers {
-  const opts = {
-    ...options,
-    ...answersFromPrompt
+  if (availableTemplateVariants.length) {
+    const { selected_variants } = await inquirer.prompt(
+      questions.selected_variants(availableTemplateVariants)
+    )
+    variantsToRemove = availableTemplateVariants.filter(
+      variant => !selected_variants.includes(variant)
+    )
   }
 
-  let fileExtension: string | string[] = opts.template_name.split('.')
-  fileExtension =
-    fileExtension.length === 1
-      ? ''
-      : `.${fileExtension[fileExtension.length - 1]}`
-
-  const answers = {
-    ...opts,
-    templatePath: `${userConfig.templateDirPath}/${opts.template_name}`,
-    finalCopyPath: `${process.cwd()}/${opts.copy_path_affix}/${
-      opts.template_rename
-    }${fileExtension}`,
-    temporaryCopyPath: `${tempDirectoryPath}/${opts.template_name}`,
-    tempDirectoryPath
-  }
-
-  return answers
+  return variantsToRemove
 }
