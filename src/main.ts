@@ -1,4 +1,3 @@
-import chalk from 'chalk'
 import replace from 'replace-in-file'
 import findInFiles from 'find-in-files'
 import fsx from 'fs-extra'
@@ -10,6 +9,7 @@ import { userConfig } from './options'
 import { tempDirectoryPath } from './constants'
 import questions from './questions'
 import { IAnswers } from './answers'
+import log from './util/log'
 
 export async function getTemplates() {
   try {
@@ -17,12 +17,7 @@ export async function getTemplates() {
     if (!templates.length) throw Error
     return templates
   } catch (err) {
-    console.error(
-      chalk.red.bold('🎂 ERROR'),
-      `Could not find directory OR files inside of directory ${
-        userConfig.templateDirPath
-      }`
-    )
+    log.errorDirectoryOrFilesNotFound()
     process.exit(1)
   }
 }

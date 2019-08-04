@@ -1,5 +1,4 @@
 import inquirer from 'inquirer'
-import chalk from 'chalk'
 
 require('./util/prototypes')
 import { getOptions } from './options'
@@ -16,9 +15,10 @@ import {
   getVariantsToRemove
 } from './main'
 import { calculateAnswers } from './answers'
+import log from './util/log'
 
 export async function cli(rawArgs) {
-  console.log(chalk.magentaBright('🎂 Pastry'))
+  log.welcome()
 
   const options = getOptions(rawArgs)
   const prompts = []
@@ -38,5 +38,5 @@ export async function cli(rawArgs) {
   await copyTemplateToFinalpath(answers)
   await createOrRemoveTempDir()
 
-  console.log(chalk.greenBright(`🎂 Pasted ${answers.template_rename}!`))
+  log.success(answers.template_rename)
 }
