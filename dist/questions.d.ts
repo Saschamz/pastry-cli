@@ -1,9 +1,9 @@
 declare const _default: {
-    template_name: (choices: any) => {
+    template_name: (choices: string[]) => {
         type: string;
         name: string;
         message: string;
-        choices: any;
+        choices: string[];
     };
     template_rename: {
         type: string;
@@ -13,14 +13,14 @@ declare const _default: {
     copy_path_affix: {
         type: string;
         itemType: string;
-        excludePath: (nodePath: any) => any;
+        excludePath: (nodePath: string) => boolean;
         name: string;
         message: string;
     };
-    selected_variants: (choices: any) => {
+    selected_variants: (choices: string[]) => {
         name: string;
         type: string;
-        choices: any;
+        choices: string[];
         message: string;
     };
 };

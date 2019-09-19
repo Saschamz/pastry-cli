@@ -9,7 +9,6 @@ function getUserConfig() {
     try {
         var config = require(process.cwd() + "/.pastryconfig.json");
         return {
-            templateDir: config.templateDir || 'pastries',
             templateDirPath: process.cwd() + '/' + (config.templateDir || 'pastries')
         };
     }

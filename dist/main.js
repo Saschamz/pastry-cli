@@ -38,11 +38,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var chalk_1 = __importDefault(require("chalk"));
 var replace_in_file_1 = __importDefault(require("replace-in-file"));
 var find_in_files_1 = __importDefault(require("find-in-files"));
-var promisified_1 = require("./promisified");
+var fs_extra_1 = __importDefault(require("fs-extra"));
+var inquirer_1 = __importDefault(require("inquirer"));
+var promisified_1 = require("./util/promisified");
+var helpers_1 = require("./util/helpers");
 var options_1 = require("./options");
+var constants_1 = require("./constants");
+var questions_1 = __importDefault(require("./questions"));
+var log_1 = __importDefault(require("./util/log"));
 function getTemplates() {
     return __awaiter(this, void 0, void 0, function () {
         var templates, err_1;
@@ -58,7 +63,7 @@ function getTemplates() {
                     return [2 /*return*/, templates];
                 case 2:
                     err_1 = _a.sent();
-                    console.error(chalk_1.default.red.bold('🎂 ERROR'), "Could not find directory OR files inside of directory " + options_1.userConfig.templateDirPath);
+                    log_1.default.errorDirectoryOrFilesNotFound();
                     process.exit(1);
                     return [3 /*break*/, 3];
                 case 3: return [2 /*return*/];
@@ -67,46 +72,53 @@ function getTemplates() {
     });
 }
 exports.getTemplates = getTemplates;
-function copyTemplate(_a) {
-    var template_name = _a.template_name, template_rename = _a.template_rename, copy_path_affix = _a.copy_path_affix;
+function copyTemplateToTemporaryPath(_a) {
+    var templatePath = _a.templatePath, temporaryCopyPath = _a.temporaryCopyPath;
     return __awaiter(this, void 0, void 0, function () {
-        var templatePath, fileExtension, copyPath;
         return __generator(this, function (_b) {
             switch (_b.label) {
-                case 0:
-                    templatePath = options_1.userConfig.templateDirPath + "/" + template_name;
-                    fileExtension = template_name.split('.');
-                    fileExtension =
-                        fileExtension.length === 1
-                            ? ''
-                            : "." + fileExtension[fileExtension.length - 1];
-                    copyPath = process.cwd() + "/" + copy_path_affix + "/" + template_rename + fileExtension;
-                    return [4 /*yield*/, promisified_1.copy(templatePath, copyPath, { clobber: false })];
+                case 0: return [4 /*yield*/, promisified_1.copy(templatePath, temporaryCopyPath, { clobber: false })];
                 case 1:
                     _b.sent();
-                    return [2 /*return*/, copyPath];
+                    return [2 /*return*/];
             }
         });
     });
 }
-exports.copyTemplate = copyTemplate;
-function renameFiles(_a) {
-    var template_rename = _a.template_rename, path = _a.path;
+exports.copyTemplateToTemporaryPath = copyTemplateToTemporaryPath;
+function copyTemplateToFinalpath(_a) {
+    var temporaryCopyPath = _a.temporaryCopyPath, finalCopyPath = _a.finalCopyPath;
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0: return [4 /*yield*/, promisified_1.copy(temporaryCopyPath, finalCopyPath, { clobber: false })];
+                case 1:
+                    _b.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.copyTemplateToFinalpath = copyTemplateToFinalpath;
+function renameFiles(_a, variantsToRemove) {
+    var template_rename = _a.template_rename, temporaryCopyPath = _a.temporaryCopyPath;
     return __awaiter(this, void 0, void 0, function () {
         var stat, isDirectory, filePaths;
         return __generator(this, function (_b) {
             switch (_b.label) {
-                case 0: return [4 /*yield*/, promisified_1.stats(path)];
+                case 0: return [4 /*yield*/, promisified_1.stats(temporaryCopyPath)];
                 case 1:
                     stat = _b.sent();
                     isDirectory = stat.isDirectory();
                     if (!!isDirectory) return [3 /*break*/, 3];
-                    return [4 /*yield*/, findAndReplace(path, template_rename)];
+                    return [4 /*yield*/, findAndReplace(temporaryCopyPath, template_rename, variantsToRemove)];
                 case 2: return [2 /*return*/, _b.sent()];
-                case 3: return [4 /*yield*/, getNestedFilePaths(path)];
+                case 3: return [4 /*yield*/, getNestedFilePaths(temporaryCopyPath)];
                 case 4:
                     filePaths = _b.sent();
-                    return [4 /*yield*/, Promise.all(filePaths.map(function (path) { return findAndReplace(path, template_rename); }))];
+                    return [4 /*yield*/, Promise.all(filePaths.map(function (path) {
+                            return findAndReplace(path, template_rename, variantsToRemove);
+                        }))];
                 case 5: return [2 /*return*/, _b.sent()];
             }
         });
@@ -138,9 +150,44 @@ var getNestedFilePaths = function (dir, filelist) {
         });
     });
 };
-// TODO: replace directory names
-// TODO: replace nested file names
-function findAndReplace(path, replacement) {
+function removeOptional(fileName, name) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, replace_in_file_1.default({
+                        files: fileName,
+                        from: helpers_1.getOptionalSnippetRegExp(name),
+                        to: ''
+                    })];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.removeOptional = removeOptional;
+function removeAllOptionalComments(fileName) {
+    return __awaiter(this, void 0, void 0, function () {
+        var regExp;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    regExp = new RegExp("//.+pastry.+", 'ig');
+                    return [4 /*yield*/, replace_in_file_1.default({
+                            files: fileName,
+                            from: regExp,
+                            to: ''
+                        })];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.removeAllOptionalComments = removeAllOptionalComments;
+function findAndReplace(path, replacement, variantsToRemove) {
     return __awaiter(this, void 0, void 0, function () {
         var fileName;
         return __generator(this, function (_a) {
@@ -152,18 +199,18 @@ function findAndReplace(path, replacement) {
                 case 1:
                     _a.sent();
                     _a.label = 2;
-                case 2: return [4 /*yield*/, replace_in_file_1.default({
-                        files: fileName,
-                        from: /PLACEHOLDER/g,
-                        to: replacement
-                    })];
-                case 3: 
-                // await replace({
-                //   files: fileName,
-                //   from: /\/\*.{0,2}pastry-optional(.|[\r\n])+\*\//gim,
-                //   to: ''
-                // })
-                return [2 /*return*/, _a.sent()];
+                case 2: return [4 /*yield*/, helpers_1.sequencePromises(variantsToRemove.map(function (variant) { return function () { return removeOptional(fileName, variant); }; }))];
+                case 3:
+                    _a.sent();
+                    return [4 /*yield*/, removeAllOptionalComments(fileName)];
+                case 4:
+                    _a.sent();
+                    return [4 /*yield*/, replace_in_file_1.default({
+                            files: fileName,
+                            from: /PLACEHOLDER/g,
+                            to: replacement
+                        })];
+                case 5: return [2 /*return*/, _a.sent()];
             }
         });
     });
@@ -184,55 +231,67 @@ function removeFromFiles(files, regEx) {
     });
 }
 exports.removeFromFiles = removeFromFiles;
-function getTemplateOptionals(path) {
+function getTemplateOptionals(_a) {
+    var tempDirectoryPath = _a.tempDirectoryPath;
     return __awaiter(this, void 0, void 0, function () {
         var files, lines, templateOptionals;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, find_in_files_1.default.find('pastry-optional', path, '.')];
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0: return [4 /*yield*/, find_in_files_1.default.find('pastry-start', tempDirectoryPath, '.')];
                 case 1:
-                    files = _a.sent();
-                    console.log('found files:', files);
+                    files = _b.sent();
                     lines = Object.values(files)
                         .map(function (file) { return file.line; })
                         //@ts-ignore
                         .flat();
-                    templateOptionals = lines.map(function (line) {
-                        return line.split('pastry-optional:')[1].trim();
-                    });
-                    return [2 /*return*/, templateOptionals];
+                    templateOptionals = lines
+                        .map(function (line) { return line.split('pastry-start'); })
+                        .filter(function (words) { return words.length >= 2; })
+                        .map(function (words) { return words[1].trim(); })
+                        .filter(Boolean);
+                    return [2 /*return*/, Array.from(new Set(templateOptionals))];
             }
         });
     });
 }
 exports.getTemplateOptionals = getTemplateOptionals;
-function createTempDir() {
+function createOrRemoveTempDir() {
     return __awaiter(this, void 0, void 0, function () {
         var tempDirExists;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, promisified_1.exists(options_1.userConfig.templateDirPath + "/__temp")];
+                case 0: return [4 /*yield*/, promisified_1.exists(constants_1.tempDirectoryPath)];
                 case 1:
                     tempDirExists = _a.sent();
                     if (!!tempDirExists) return [3 /*break*/, 3];
-                    return [4 /*yield*/, promisified_1.mkdir("$" + options_1.userConfig.templateDirPath + "/__temp")];
-                case 2:
-                    _a.sent();
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
+                    return [4 /*yield*/, promisified_1.mkdir(constants_1.tempDirectoryPath)];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    fs_extra_1.default.removeSync(constants_1.tempDirectoryPath);
+                    return [2 /*return*/];
             }
         });
     });
 }
-exports.createTempDir = createTempDir;
-function removeTempDir() {
+exports.createOrRemoveTempDir = createOrRemoveTempDir;
+function getVariantsToRemove(answers) {
     return __awaiter(this, void 0, void 0, function () {
+        var availableTemplateVariants, variantsToRemove, selected_variants_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, promisified_1.rmdir(options_1.userConfig.templateDirPath + "/__temp")];
-                case 1: return [2 /*return*/, _a.sent()];
+                case 0: return [4 /*yield*/, getTemplateOptionals(answers)];
+                case 1:
+                    availableTemplateVariants = _a.sent();
+                    variantsToRemove = [];
+                    if (!availableTemplateVariants.length) return [3 /*break*/, 3];
+                    return [4 /*yield*/, inquirer_1.default.prompt(questions_1.default.selected_variants(availableTemplateVariants))];
+                case 2:
+                    selected_variants_1 = (_a.sent()).selected_variants;
+                    variantsToRemove = availableTemplateVariants.filter(function (variant) { return !selected_variants_1.includes(variant); });
+                    _a.label = 3;
+                case 3: return [2 /*return*/, variantsToRemove];
             }
         });
     });
 }
-exports.removeTempDir = removeTempDir;
+exports.getVariantsToRemove = getVariantsToRemove;

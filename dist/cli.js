@@ -1,15 +1,4 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -50,19 +39,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var inquirer_1 = __importDefault(require("inquirer"));
-var chalk_1 = __importDefault(require("chalk"));
-require('./prototypes');
+require('./util/prototypes');
 var options_1 = require("./options");
 var questions_1 = __importDefault(require("./questions"));
 inquirer_1.default.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 var main_1 = require("./main");
+var answers_1 = require("./answers");
+var log_1 = __importDefault(require("./util/log"));
 function cli(rawArgs) {
     return __awaiter(this, void 0, void 0, function () {
-        var options, prompts, templates, answersFromPrompt, answers, path, availableTemplateVariants, selected_variants, variantsToRemove;
+        var options, prompts, templates, answersFromPrompt, answers, variantsToRemove;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log(chalk_1.default.magentaBright('🎂 Pastry'));
+                    log_1.default.welcome();
                     options = options_1.getOptions(rawArgs);
                     prompts = [];
                     return [4 /*yield*/, main_1.getTemplates()];
@@ -77,23 +67,26 @@ function cli(rawArgs) {
                     return [4 /*yield*/, inquirer_1.default.prompt(prompts)];
                 case 2:
                     answersFromPrompt = _a.sent();
-                    answers = __assign({}, options, answersFromPrompt);
-                    return [4 /*yield*/, main_1.copyTemplate(answers)];
+                    answers = answers_1.calculateAnswers(options, answersFromPrompt);
+                    return [4 /*yield*/, main_1.createOrRemoveTempDir()];
                 case 3:
-                    path = _a.sent();
-                    return [4 /*yield*/, main_1.renameFiles(__assign({}, answers, { path: path }))];
+                    _a.sent();
+                    return [4 /*yield*/, main_1.copyTemplateToTemporaryPath(answers)];
                 case 4:
                     _a.sent();
-                    return [4 /*yield*/, main_1.getTemplateOptionals(path)];
+                    return [4 /*yield*/, main_1.getVariantsToRemove(answers)];
                 case 5:
-                    availableTemplateVariants = _a.sent();
-                    return [4 /*yield*/, inquirer_1.default.prompt(questions_1.default.selected_variants(availableTemplateVariants))];
+                    variantsToRemove = _a.sent();
+                    return [4 /*yield*/, main_1.renameFiles(answers, variantsToRemove)];
                 case 6:
-                    selected_variants = (_a.sent()).selected_variants;
-                    variantsToRemove = availableTemplateVariants.filter(function (variant) { return !selected_variants.includes(variant); });
-                    console.log('selected_variants', selected_variants);
-                    console.log('variantsToRemove', variantsToRemove);
-                    console.log(chalk_1.default.greenBright("\uD83C\uDF82 Pasted " + answers.template_rename + "!"));
+                    _a.sent();
+                    return [4 /*yield*/, main_1.copyTemplateToFinalpath(answers)];
+                case 7:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.createOrRemoveTempDir()];
+                case 8:
+                    _a.sent();
+                    log_1.default.success(answers.template_rename);
                     return [2 /*return*/];
             }
         });
