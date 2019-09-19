@@ -10,7 +10,7 @@
   "scripts": {
     "start": "ts-node src",
     "build": "tsc",
-    "deploy": "tsc && npm deploy"
+    "deploy": "tsc && npm publish"
   },
   "homepage": "https://github.com/Saschamz/pastry-cli",
   "author": "Sascha Ringström",
