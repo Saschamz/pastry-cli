@@ -14,6 +14,24 @@ Install either to your project `npm i pastry-cli` or globally `npm i -g pastry-c
 
 The cli will guide you through the rest of the steps.
 
+## Name replacement
+
+You can replace any text including filenames with the name you provide when running pastry.
+
+For example: running `pastry -n testFile` would change the following:
+
+`PLACEHOLDER.ts` ~> `testFile.ts`
+
+When changing text inside a file you have more options:
+
+`export default PLACEHOLDER'` ~> `export default testFile`
+
+`export default UPPER_PLACEHOLDER'` ~> `export default TESTFILE`
+
+`export default LOWER_PLACEHOLDER'` ~> `export default testfile`
+
+`export default PASCAL_PLACEHOLDER'` ~> `export default TestFile`
+
 ## Optional Snippets
 
 With optional snippets you can predefine parts of code you **might** want to use in a file.

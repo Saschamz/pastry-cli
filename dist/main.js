@@ -1,9 +1,10 @@
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -189,7 +190,7 @@ function removeAllOptionalComments(fileName) {
 exports.removeAllOptionalComments = removeAllOptionalComments;
 function findAndReplace(path, replacement, variantsToRemove) {
     return __awaiter(this, void 0, void 0, function () {
-        var fileName;
+        var fileName, defaultReplacement, uppercaseReplacement, lowercaseReplacement, pascalcaseReplacement, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -205,12 +206,47 @@ function findAndReplace(path, replacement, variantsToRemove) {
                     return [4 /*yield*/, removeAllOptionalComments(fileName)];
                 case 4:
                     _a.sent();
+                    defaultReplacement = replacement;
+                    uppercaseReplacement = replacement.toUpperCase();
+                    lowercaseReplacement = replacement.toLowerCase();
+                    pascalcaseReplacement = "" + replacement[0].toUpperCase() + replacement.substr(1);
+                    _a.label = 5;
+                case 5:
+                    _a.trys.push([5, 10, , 11]);
+                    return [4 /*yield*/, replace_in_file_1.default({
+                            files: fileName,
+                            from: /UPPER_PLACEHOLDER/g,
+                            to: uppercaseReplacement
+                        })];
+                case 6:
+                    _a.sent();
+                    return [4 /*yield*/, replace_in_file_1.default({
+                            files: fileName,
+                            from: /LOWER_PLACEHOLDER/g,
+                            to: lowercaseReplacement
+                        })];
+                case 7:
+                    _a.sent();
+                    return [4 /*yield*/, replace_in_file_1.default({
+                            files: fileName,
+                            from: /PASCAL_PLACEHOLDER/g,
+                            to: pascalcaseReplacement
+                        })];
+                case 8:
+                    _a.sent();
                     return [4 /*yield*/, replace_in_file_1.default({
                             files: fileName,
                             from: /PLACEHOLDER/g,
-                            to: replacement
+                            to: defaultReplacement
                         })];
-                case 5: return [2 /*return*/, _a.sent()];
+                case 9:
+                    _a.sent();
+                    return [3 /*break*/, 11];
+                case 10:
+                    error_1 = _a.sent();
+                    console.log("Error replacing placeholder values: " + error_1);
+                    return [3 /*break*/, 11];
+                case 11: return [2 /*return*/];
             }
         });
     });

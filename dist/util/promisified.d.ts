@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import fs from 'fs';
 export declare const readdir: typeof fs.readdir.__promisify__;
 export declare const copy: Function;

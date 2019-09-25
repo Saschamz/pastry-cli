@@ -94,7 +94,11 @@ export async function removeAllOptionalComments(fileName) {
   })
 }
 
-export async function findAndReplace(path, replacement, variantsToRemove) {
+export async function findAndReplace(
+  path: string,
+  replacement: string,
+  variantsToRemove: string[]
+) {
   const fileName = path.replace(/PLACEHOLDER/i, replacement)
   if (path !== fileName) {
     await rename(path, fileName)
@@ -106,11 +110,40 @@ export async function findAndReplace(path, replacement, variantsToRemove) {
 
   await removeAllOptionalComments(fileName)
 
-  return await replace({
-    files: fileName,
-    from: /PLACEHOLDER/g,
-    to: replacement
-  })
+  const defaultReplacement = replacement
+  const uppercaseReplacement = replacement.toUpperCase()
+  const lowercaseReplacement = replacement.toLowerCase()
+  const pascalcaseReplacement = `${replacement[0].toUpperCase()}${replacement.substr(
+    1
+  )}`
+
+  try {
+    await replace({
+      files: fileName,
+      from: /UPPER_PLACEHOLDER/g,
+      to: uppercaseReplacement
+    })
+    
+    await replace({
+      files: fileName,
+      from: /LOWER_PLACEHOLDER/g,
+      to: lowercaseReplacement
+    })
+    
+    await replace({
+      files: fileName,
+      from: /PASCAL_PLACEHOLDER/g,
+      to: pascalcaseReplacement
+    })
+
+    await replace({
+      files: fileName,
+      from: /PLACEHOLDER/g,
+      to: defaultReplacement
+    })
+  } catch (error) {
+    console.log(`Error replacing placeholder values: ${error}`)
+  }
 }
 
 export async function removeFromFiles(files, regEx) {

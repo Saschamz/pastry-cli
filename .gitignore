@@ -3,3 +3,4 @@ node_modules
 pastries
 .pastryconfig.json
 test
+src/__temp
