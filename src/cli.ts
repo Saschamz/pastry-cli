@@ -18,7 +18,7 @@ require('./util/prototypes')
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'))
 
-export async function cli(rawArgs) {
+export async function cli(rawArgs: string[]) {
   log.welcome()
 
   const options = getOptions(rawArgs)

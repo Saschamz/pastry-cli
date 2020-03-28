@@ -26,18 +26,18 @@ export async function getTemplates() {
   }
 }
 
-export async function copyTemplateToTemporaryPath({
+export function copyTemplateToTemporaryPath({
   templatePath,
   temporaryCopyPath
 }: IAnswers) {
-  await copy(templatePath, temporaryCopyPath, { clobber: false })
+  return copy(templatePath, temporaryCopyPath, { clobber: false })
 }
 
-export async function copyTemplateToFinalpath({
+export function copyTemplateToFinalpath({
   temporaryCopyPath,
   finalCopyPath
 }: IAnswers) {
-  await copy(temporaryCopyPath, finalCopyPath, { clobber: false })
+  return copy(temporaryCopyPath, finalCopyPath, { clobber: false })
 }
 
 export async function renameFiles(
@@ -45,71 +45,78 @@ export async function renameFiles(
   variantsToRemove,
   replacementStrings?: StringCasings
 ) {
-  const stat = await stats(temporaryCopyPath)
-  const isDirectory = stat.isDirectory()
+  try {
+    const stat = await stats(temporaryCopyPath)
+    const isDirectory = stat.isDirectory()
 
-  if (!isDirectory) {
-    return await findAndReplace(
-      temporaryCopyPath,
-      template_rename,
-      variantsToRemove,
-      replacementStrings
-    )
-  }
-
-  const filePaths = await getNestedFilePaths(temporaryCopyPath)
-
-  return await Promise.all(
-    filePaths.map((path: string) =>
-      findAndReplace(
-        path,
+    if (!isDirectory) {
+      return await findAndReplace(
+        temporaryCopyPath,
         template_rename,
         variantsToRemove,
         replacementStrings
       )
-    )
-  )
-}
-
-const getNestedFilePaths = async function(dir, filelist?: any) {
-  var path = path || require('path')
-  var fs = fs || require('fs'),
-    files = await readdir(dir)
-  filelist = filelist || []
-  files.forEach(function(file) {
-    if (fs.statSync(path.join(dir, file)).isDirectory()) {
-      filelist = getNestedFilePaths(path.join(dir, file), filelist)
-    } else {
-      filelist.push(path.join(dir, file))
     }
-  })
 
-  return filelist
+    const filePaths = await getNestedFilePaths(temporaryCopyPath)
+
+    return await Promise.all(
+      filePaths.map((path: string) =>
+        findAndReplace(
+          path,
+          template_rename,
+          variantsToRemove,
+          replacementStrings
+        )
+      )
+    )
+  } catch (error) {
+    log.error('Error renaming files', error.message)
+  }
 }
 
-export async function removeOptional(fileName, name: string) {
+const getNestedFilePaths = async function(dir: string, filelist?: any) {
+  try {
+    var path = path || require('path')
+    var fs = fs || require('fs'),
+      files = await readdir(dir)
+    filelist = filelist || []
+    files.forEach(function(file) {
+      if (fs.statSync(path.join(dir, file)).isDirectory()) {
+        filelist = getNestedFilePaths(path.join(dir, file), filelist)
+      } else {
+        filelist.push(path.join(dir, file))
+      }
+    })
+
+    return filelist
+  } catch (error) {
+    log.error('Error getting nested file paths', error.message)
+  }
+}
+
+export async function removeOptional(fileName: string, name: string) {
   await replace({
     files: fileName,
     from: getOptionalSnippetRegExp(name),
     to: ''
-  })
+  }).catch(error => log.error(error.message))
 }
 
-export async function removeAllOptionalComments(fileName) {
+export async function removeAllOptionalComments(fileName: string) {
   const regExp = new RegExp(`\/\/.+pastry.+`, 'ig')
 
   await replace({
     files: fileName,
     from: regExp,
     to: ''
-  })
+  }).catch(error => log.error(error.message))
 }
 
 export async function findAndReplace(
   path: string,
   replacement: string,
   variantsToRemove: string[],
-
   searchStrings: StringCasings = {
     default: 'PLACEHOLDER',
     lower: 'LOWER_PLACEHOLDER',
@@ -124,19 +131,20 @@ export async function findAndReplace(
   const pascalRegExp = new RegExp(searchStrings.pascal, 'g')
 
   const fileName = path.replace(fileNameRegExp, replacement)
-  if (path !== fileName) {
-    await rename(path, fileName)
-  }
-
-  await sequencePromises(
-    variantsToRemove.map(variant => () => removeOptional(fileName, variant))
-  )
-
-  await removeAllOptionalComments(fileName)
-
-  const replacements = getStringCasings(replacement)
 
   try {
+    if (path !== fileName) {
+      await rename(path, fileName)
+    }
+
+    await sequencePromises(
+      variantsToRemove.map(variant => () => removeOptional(fileName, variant))
+    )
+
+    await removeAllOptionalComments(fileName)
+
+    const replacements = getStringCasings(replacement)
+
     await replace({
       files: fileName,
       from: upperRegExp,
@@ -161,7 +169,7 @@ export async function findAndReplace(
       to: replacements.default
     })
   } catch (error) {
-    console.log(`Error replacing placeholder values: ${error.message}`)
+    log.error('Error replacing file names/values', error.message)
   }
 }
 
@@ -184,9 +192,9 @@ export async function getTemplateOptionals({
     .flat()
 
   const templateOptionals = lines
-    .map(line => line.split('pastry-start'))
-    .filter(words => words.length >= 2)
-    .map(words => words[1].trim())
+    .map((line: string) => line.split('pastry-start'))
+    .filter((words: string[]) => words.length >= 2)
+    .map((words: string[]) => words[1].trim())
     .filter(Boolean)
 
   return Array.from(new Set(templateOptionals))

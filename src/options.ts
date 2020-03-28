@@ -11,16 +11,16 @@ function getUserConfig(): IUserConfig {
     const config = require(`${process.cwd()}/.pastryconfig.json`)
 
     return {
-      templateDirPath: process.cwd() + '/' + (config.templateDir || 'pastries')
+      templateDirPath: `${process.cwd()}/${config.templateDir || 'pastries'}`
     }
-  } catch (err) {
+  } catch (error) {
     return {
-      templateDirPath: process.cwd() + '/pastries'
+      templateDirPath: `${process.cwd()}/pastries`
     }
   }
 }
 
-export function getOptions(rawArgs) {
+export function getOptions(rawArgs: string[]) {
   const args = arg(
     {
       '--template': String,
