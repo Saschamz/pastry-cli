@@ -1,15 +1,19 @@
-import replace from 'replace-in-file'
 import findInFiles from 'find-in-files'
 import fsx from 'fs-extra'
 import inquirer from 'inquirer'
-
-import { copy, readdir, rename, stats, mkdir, exists } from './util/promisified'
-import { sequencePromises, getOptionalSnippetRegExp } from './util/helpers'
-import { userConfig } from './options'
-import { tempDirectoryPath } from './constants'
-import questions from './questions'
+import replace from 'replace-in-file'
 import { IAnswers } from './answers'
+import { tempDirectoryPath } from './constants'
+import { userConfig } from './options'
+import questions from './questions'
+import { StringCasings } from './types'
+import {
+  getOptionalSnippetRegExp,
+  getStringCasings,
+  sequencePromises
+} from './util/helpers'
 import log from './util/log'
+import { copy, exists, mkdir, readdir, rename, stats } from './util/promisified'
 
 export async function getTemplates() {
   try {
@@ -38,7 +42,8 @@ export async function copyTemplateToFinalpath({
 
 export async function renameFiles(
   { template_rename, temporaryCopyPath },
-  variantsToRemove
+  variantsToRemove,
+  replacementStrings?: StringCasings
 ) {
   const stat = await stats(temporaryCopyPath)
   const isDirectory = stat.isDirectory()
@@ -47,7 +52,8 @@ export async function renameFiles(
     return await findAndReplace(
       temporaryCopyPath,
       template_rename,
-      variantsToRemove
+      variantsToRemove,
+      replacementStrings
     )
   }
 
@@ -55,7 +61,12 @@ export async function renameFiles(
 
   return await Promise.all(
     filePaths.map((path: string) =>
-      findAndReplace(path, template_rename, variantsToRemove)
+      findAndReplace(
+        path,
+        template_rename,
+        variantsToRemove,
+        replacementStrings
+      )
     )
   )
 }
@@ -97,9 +108,22 @@ export async function removeAllOptionalComments(fileName) {
 export async function findAndReplace(
   path: string,
   replacement: string,
-  variantsToRemove: string[]
+  variantsToRemove: string[],
+
+  searchStrings: StringCasings = {
+    default: 'PLACEHOLDER',
+    lower: 'LOWER_PLACEHOLDER',
+    upper: 'UPPER_PLACEHOLDER',
+    pascal: 'PASCAL_PLACEHOLDER'
+  }
 ) {
-  const fileName = path.replace(/PLACEHOLDER/i, replacement)
+  const fileNameRegExp = new RegExp(searchStrings.default + '(?=\\.)', 'i')
+  const defaultRegExp = new RegExp(searchStrings.default, 'g')
+  const upperRegExp = new RegExp(searchStrings.upper, 'g')
+  const lowerRegExp = new RegExp(searchStrings.lower, 'g')
+  const pascalRegExp = new RegExp(searchStrings.pascal, 'g')
+
+  const fileName = path.replace(fileNameRegExp, replacement)
   if (path !== fileName) {
     await rename(path, fileName)
   }
@@ -110,39 +134,34 @@ export async function findAndReplace(
 
   await removeAllOptionalComments(fileName)
 
-  const defaultReplacement = replacement
-  const uppercaseReplacement = replacement.toUpperCase()
-  const lowercaseReplacement = replacement.toLowerCase()
-  const pascalcaseReplacement = `${replacement[0].toUpperCase()}${replacement.substr(
-    1
-  )}`
+  const replacements = getStringCasings(replacement)
 
   try {
     await replace({
       files: fileName,
-      from: /UPPER_PLACEHOLDER/g,
-      to: uppercaseReplacement
-    })
-    
-    await replace({
-      files: fileName,
-      from: /LOWER_PLACEHOLDER/g,
-      to: lowercaseReplacement
-    })
-    
-    await replace({
-      files: fileName,
-      from: /PASCAL_PLACEHOLDER/g,
-      to: pascalcaseReplacement
+      from: upperRegExp,
+      to: replacements.upper
     })
 
     await replace({
       files: fileName,
-      from: /PLACEHOLDER/g,
-      to: defaultReplacement
+      from: lowerRegExp,
+      to: replacements.lower
+    })
+
+    await replace({
+      files: fileName,
+      from: pascalRegExp,
+      to: replacements.pascal
+    })
+
+    await replace({
+      files: fileName,
+      from: defaultRegExp,
+      to: replacements.default
     })
   } catch (error) {
-    console.log(`Error replacing placeholder values: ${error}`)
+    console.log(`Error replacing placeholder values: ${error.message}`)
   }
 }
 
@@ -176,7 +195,11 @@ export async function getTemplateOptionals({
 export async function createOrRemoveTempDir() {
   const tempDirExists = await exists(tempDirectoryPath)
   if (!tempDirExists) return await mkdir(tempDirectoryPath)
-  fsx.removeSync(tempDirectoryPath)
+  removePath(tempDirectoryPath)
+}
+
+export function removePath(path: string) {
+  fsx.removeSync(path)
 }
 
 export async function getVariantsToRemove(answers: IAnswers) {
