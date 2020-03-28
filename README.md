@@ -1,10 +1,12 @@
 # Pastry-CLI
 
-This CLI helps speed up your workflow, project guidelines and code reusability by adding support for pasting template building blocks.
+This CLI aims to help speed up your workflow, guidelines and code reusability by adding support for pasting template building blocks.
+
+Since it's not related to any specific frameworks or languages it can be used everywhere and for anything with minimal setup and full control.
 
 ## Installation
 
-Install either to your project `npm i pastry-cli` or globally `npm i -g pastry-cli`
+Install either inside your project `npm i pastry-cli` or globally `npm i -g pastry-cli`
 
 ## Setup/Usage
 
@@ -43,15 +45,23 @@ console.log('I may be part of the file, yay!')
 // pastry-end log
 ```
 
+## Renaming existing files
+
+By running `pastry --rename` you can rename existing files.
+Currently, there is only support to rename together with the parent directory.
+The name of the directory will be used as `PLACEHOLDER` is used normally.
+
 ## Available Arguments
 
 `-n | --name` define the new name
 
-`-p | --path` define the new path to paste the blueprint into (from current working directory)
+`-p | --path` define the new path to paste the pastry into (from current working directory)
 
 `-t | --template` specify the name of the template you want to use
 
 `-h | --help` lists available commands
+
+`-r | --rename` renames existing pastry
 
 ## Configuration
 
