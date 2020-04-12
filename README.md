@@ -51,14 +51,15 @@ By running `pastry --rename` you can rename existing files.
 Currently, there is only support to rename together with the parent directory.
 The name of the directory will be used as `PLACEHOLDER` is used normally.
 
-## Available Arguments
+## Available arguments
 
-| Argument | Shorthand | Description                                      | Arguments |
-| -------- | --------- | ------------------------------------------------ | --------- |
-| --name   | -n        | Define the new name                              | name      |
-| --path   | -p        | Define the target path                           | path      |
-| --rename | -r        | Rename existing                                  | none      |
-| --help   | -h        | Specify the name of the template you want to use | none      |
+| Argument   | Shorthand | Description                 | Arguments |
+| ---------- | --------- | --------------------------- | --------- |
+| --name     | -n        | Define the new name         | name      |
+| --path     | -p        | Define the target path      | path      |
+| --template | -t        | Name of the template to use | name      |
+| --rename   | -r        | Rename existing             | none      |
+| --help     | -h        | List available arguments    | none      |
 
 ## Configuration
 
@@ -75,8 +76,8 @@ Configuration can be done by creating a `.pastryconfig.json` in the root directo
 - [x] Improved error handling/messages
 - [x] Types for everything
 - [x] Rename existing feature
-- [] Save as pastry feature
-- [] More configuration options
-- [] Support for using pastry from any directory inside a project
-- [] Support for using remote pastries hosted on github
-- [] Refactor architecture to use features as modules
+- [ ] Save as pastry feature
+- [ ] More configuration options
+- [ ] Support for using pastry from any directory inside a project
+- [ ] Support for using remote pastries hosted on github
+- [ ] Refactor architecture to use features as modules
