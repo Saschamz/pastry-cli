@@ -29,14 +29,11 @@ export function getOptions(rawArgs: string[]): CLIOptions {
       '--name': String,
       '--help': arg.COUNT,
       '--rename': arg.COUNT,
-      // TODO: Implement save as template option
-      // '--save': arg.COUNT,
       '-n': '--name',
       '-p': '--path',
       '-t': '--template',
       '-h': '--help',
       '-r': '--rename',
-      // '-s': '--save'
     },
     {
       argv: rawArgs.slice(2),
@@ -45,7 +42,6 @@ export function getOptions(rawArgs: string[]): CLIOptions {
 
   if ((args['--help'] as any) > 0) {
     console.log(`
-      // --save | -s) Saves a file/directory as a pastry
       --rename | -r) Rename existing pastry
       --template | -b) Specify template name
       --path | -p) Specify new relative path
@@ -60,6 +56,5 @@ export function getOptions(rawArgs: string[]): CLIOptions {
     copy_path_affix: args['--path'],
     template_rename: args['--name'],
     rename_existing: args['--rename'],
-    save_as_template: args['--save'],
   }
 }

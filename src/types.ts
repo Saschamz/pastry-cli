@@ -10,7 +10,6 @@ export type CLIOptions = {
   template_rename: string
   copy_path_affix: string
   rename_existing: number
-  save_as_template: number
 }
 
 export type CLIAnswers = CLIOptions & {

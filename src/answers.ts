@@ -8,7 +8,7 @@ export function calculateAnswers(
 ): CLIAnswers {
   const opts = {
     ...options,
-    ...answersFromPrompt
+    ...answersFromPrompt,
   }
 
   let fileExtension: string | string[] = (opts.template_name || '').split('.')
@@ -24,11 +24,7 @@ export function calculateAnswers(
       opts.template_rename
     }${fileExtension}`,
     temporaryCopyPath: `${tempDirectoryPath}/${opts.template_name}`,
-    tempDirectoryPath
-  }
-
-  if (opts.save_as_template) {
-    // switch input dir and output dir
+    tempDirectoryPath,
   }
 
   if (opts.rename_existing) {

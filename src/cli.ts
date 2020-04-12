@@ -7,14 +7,13 @@ import {
   getTemplates,
   getVariantsToRemove,
   removePath,
-  renameFiles
+  renameFiles,
 } from './main'
 import { getOptions } from './options'
 import questions from './questions'
 import { CLIAnswers } from './types'
 import { getStringCasings } from './util/helpers'
 import log from './util/log'
-import { copy } from './util/promisified'
 
 require('./util/prototypes')
 
@@ -40,20 +39,6 @@ export async function cli(rawArgs: string[]) {
   const flow = options.rename_existing ? renameFlow : createFlow
 
   flow(answers)
-}
-
-export async function saveFlow(answers: CLIAnswers) {
-  try {
-    await createOrRemoveTempDir()
-    await copy(
-      process.cwd() + '/' + answers.copy_path_affix,
-      answers.tempDirectoryPath
-    )
-    await copyTemplateToFinalpath(answers)
-    await createOrRemoveTempDir()
-  } catch (error) {
-    log.error('Error saving pastry', error.message)
-  }
 }
 
 export async function createFlow(answers: CLIAnswers) {
