@@ -6,13 +6,13 @@ Since it's not related to any specific frameworks or languages it can be used ev
 
 ## Installation
 
-Install either inside your project `npm i pastry-cli` or globally `npm i -g pastry-cli`
+Install globally with npm `npm i -g pastry-cli` or yarn `yarn global add pastry-cli`
 
 ## Setup/Usage
 
-1. Create a `/pastries` directory in your project root.
+1. Create a `/pastries` directory in your project source directory.
 2. Populate the directory with template files/folders.
-3. run `pastry` inside your terminal while in the root directory of your project.
+3. run `pastry` inside your terminal while located inside your project source directory.
 
 The cli will guide you through the rest of the steps.
 
@@ -53,15 +53,12 @@ The name of the directory will be used as `PLACEHOLDER` is used normally.
 
 ## Available Arguments
 
-`-n | --name` define the new name
-
-`-p | --path` define the new path to paste the pastry into (from current working directory)
-
-`-t | --template` specify the name of the template you want to use
-
-`-h | --help` lists available commands
-
-`-r | --rename` renames existing pastry
+| Argument | Shorthand | Description                                      | Arguments |
+| -------- | --------- | ------------------------------------------------ | --------- |
+| --name   | -n        | Define the new name                              | name      |
+| --path   | -p        | Define the target path                           | path      |
+| --rename | -r        | Rename existing                                  | none      |
+| --help   | -h        | Specify the name of the template you want to use | none      |
 
 ## Configuration
 
@@ -72,3 +69,14 @@ Configuration can be done by creating a `.pastryconfig.json` in the root directo
   "templateDir": "{YOUR_TEMPLATE_DIRECTORY}" // default = pastries
 }
 ```
+
+## Roadmap (help wanted)
+
+- [x] Improved error handling/messages
+- [x] Types for everything
+- [x] Rename existing feature
+- [] Save as pastry feature
+- [] More configuration options
+- [] Support for using pastry from any directory inside a project
+- [] Support for using remote pastries hosted on github
+- [] Refactor architecture to use features as modules
