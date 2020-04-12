@@ -75,8 +75,8 @@ Configuration can be done by creating a `.pastryconfig.json` in the root directo
 - [x] Improved error handling/messages
 - [x] Types for everything
 - [x] Rename existing feature
-- [] Save as pastry feature
-- [] More configuration options
-- [] Support for using pastry from any directory inside a project
-- [] Support for using remote pastries hosted on github
-- [] Refactor architecture to use features as modules
+- [ ] Save as pastry feature
+- [ ] More configuration options
+- [ ] Support for using pastry from any directory inside a project
+- [ ] Support for using remote pastries hosted on github
+- [ ] Refactor architecture to use features as modules
