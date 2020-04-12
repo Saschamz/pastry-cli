@@ -175,26 +175,34 @@ export async function removeFromFiles(files, regEx) {
 export async function getTemplateOptionals({
   tempDirectoryPath,
 }: CLIAnswers): Promise<string[]> {
-  const files = await findInFiles.find('pastry-start', tempDirectoryPath, '.')
+  try {
+    const files = await findInFiles.find('pastry-start', tempDirectoryPath, '.')
 
-  const lines = Object.values(files)
-    .map((file: any) => file.line)
-    //@ts-ignore
-    .flat()
+    const lines = Object.values(files)
+      .map((file: any) => file.line)
+      //@ts-ignore
+      .flat()
 
-  const templateOptionals = lines
-    .map((line: string) => line.split('pastry-start'))
-    .filter((words: string[]) => words.length >= 2)
-    .map((words: string[]) => words[1].trim())
-    .filter(Boolean)
+    const templateOptionals = lines
+      .map((line: string) => line.split('pastry-start'))
+      .filter((words: string[]) => words.length >= 2)
+      .map((words: string[]) => words[1].trim())
+      .filter(Boolean)
 
-  return Array.from(new Set(templateOptionals))
+    return Array.from(new Set(templateOptionals))
+  } catch (error) {
+    log.error('Error getting template optionals', error.message)
+  }
 }
 
 export async function createOrRemoveTempDir() {
-  const tempDirExists = await exists(tempDirectoryPath)
-  if (!tempDirExists) return await mkdir(tempDirectoryPath)
-  removePath(tempDirectoryPath)
+  try {
+    const tempDirExists = await exists(tempDirectoryPath)
+    if (!tempDirExists) return await mkdir(tempDirectoryPath)
+    removePath(tempDirectoryPath)
+  } catch (error) {
+    log.error('Error creating/removing temporary directory', error.message)
+  }
 }
 
 export function removePath(path: string) {
@@ -202,17 +210,21 @@ export function removePath(path: string) {
 }
 
 export async function getVariantsToRemove(answers: CLIAnswers) {
-  const availableTemplateVariants = await getTemplateOptionals(answers)
-  let variantsToRemove = []
+  try {
+    const availableTemplateVariants = await getTemplateOptionals(answers)
+    let variantsToRemove = []
 
-  if (availableTemplateVariants.length) {
-    const { selected_variants } = await inquirer.prompt(
-      questions.selected_variants(availableTemplateVariants)
-    )
-    variantsToRemove = availableTemplateVariants.filter(
-      (variant) => !selected_variants.includes(variant)
-    )
+    if (availableTemplateVariants.length) {
+      const { selected_variants } = await inquirer.prompt(
+        questions.selected_variants(availableTemplateVariants)
+      )
+      variantsToRemove = availableTemplateVariants.filter(
+        (variant) => !selected_variants.includes(variant)
+      )
+    }
+
+    return variantsToRemove
+  } catch (error) {
+    log.error('Error getting available variants', error.message)
   }
-
-  return variantsToRemove
 }

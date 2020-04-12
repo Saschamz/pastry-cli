@@ -40,16 +40,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var inquirer_1 = __importDefault(require("inquirer"));
-require('./util/prototypes');
+var answers_1 = require("./answers");
+var main_1 = require("./main");
 var options_1 = require("./options");
 var questions_1 = __importDefault(require("./questions"));
-inquirer_1.default.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
-var main_1 = require("./main");
-var answers_1 = require("./answers");
+var helpers_1 = require("./util/helpers");
 var log_1 = __importDefault(require("./util/log"));
+require('./util/prototypes');
+inquirer_1.default.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 function cli(rawArgs) {
     return __awaiter(this, void 0, void 0, function () {
-        var options, prompts, templates, answersFromPrompt, answers, variantsToRemove;
+        var options, prompts, templates, answersFromPrompt, answers, flow;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -59,8 +60,10 @@ function cli(rawArgs) {
                     return [4 /*yield*/, main_1.getTemplates()];
                 case 1:
                     templates = _a.sent();
-                    if (!options.template_name)
-                        prompts.push(questions_1.default.template_name(templates));
+                    if (!options.rename_existing) {
+                        if (!options.template_name)
+                            prompts.push(questions_1.default.template_name(templates));
+                    }
                     if (!options.template_rename)
                         prompts.push(questions_1.default.template_rename);
                     if (!options.copy_path_affix)
@@ -69,28 +72,87 @@ function cli(rawArgs) {
                 case 2:
                     answersFromPrompt = _a.sent();
                     answers = answers_1.calculateAnswers(options, answersFromPrompt);
-                    return [4 /*yield*/, main_1.createOrRemoveTempDir()];
-                case 3:
-                    _a.sent();
-                    return [4 /*yield*/, main_1.copyTemplateToTemporaryPath(answers)];
-                case 4:
-                    _a.sent();
-                    return [4 /*yield*/, main_1.getVariantsToRemove(answers)];
-                case 5:
-                    variantsToRemove = _a.sent();
-                    return [4 /*yield*/, main_1.renameFiles(answers, variantsToRemove)];
-                case 6:
-                    _a.sent();
-                    return [4 /*yield*/, main_1.copyTemplateToFinalpath(answers)];
-                case 7:
-                    _a.sent();
-                    return [4 /*yield*/, main_1.createOrRemoveTempDir()];
-                case 8:
-                    _a.sent();
-                    log_1.default.success(answers.template_rename);
+                    flow = options.rename_existing ? renameFlow : createFlow;
+                    flow(answers);
                     return [2 /*return*/];
             }
         });
     });
 }
 exports.cli = cli;
+function createFlow(answers) {
+    return __awaiter(this, void 0, void 0, function () {
+        var variantsToRemove, error_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 7, , 8]);
+                    return [4 /*yield*/, main_1.createOrRemoveTempDir()];
+                case 1:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.copyTemplateToTemporaryPath(answers)];
+                case 2:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.getVariantsToRemove(answers)];
+                case 3:
+                    variantsToRemove = _a.sent();
+                    return [4 /*yield*/, main_1.renameFiles(answers, variantsToRemove)];
+                case 4:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.copyTemplateToFinalpath(answers)];
+                case 5:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.createOrRemoveTempDir()];
+                case 6:
+                    _a.sent();
+                    log_1.default.success(answers.template_rename);
+                    return [3 /*break*/, 8];
+                case 7:
+                    error_1 = _a.sent();
+                    log_1.default.error('Error creating component', error_1.message);
+                    return [3 /*break*/, 8];
+                case 8: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.createFlow = createFlow;
+function renameFlow(answers) {
+    return __awaiter(this, void 0, void 0, function () {
+        var existingName, searchStrings, error_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    existingName = answers.copy_path_affix.split('/').reverse()[0];
+                    searchStrings = helpers_1.getStringCasings(existingName);
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 7, , 8]);
+                    return [4 /*yield*/, main_1.createOrRemoveTempDir()];
+                case 2:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.copyTemplateToTemporaryPath(answers)];
+                case 3:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.renameFiles(answers, [], searchStrings)];
+                case 4:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.copyTemplateToFinalpath(answers)];
+                case 5:
+                    _a.sent();
+                    return [4 /*yield*/, main_1.createOrRemoveTempDir()];
+                case 6:
+                    _a.sent();
+                    main_1.removePath(process.cwd() + "/" + answers.copy_path_affix);
+                    log_1.default.success_rename(existingName, answers.template_rename);
+                    return [3 /*break*/, 8];
+                case 7:
+                    error_2 = _a.sent();
+                    log_1.default.error('Error renaming component', error_2.message);
+                    return [3 /*break*/, 8];
+                case 8: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.renameFlow = renameFlow;

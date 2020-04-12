@@ -39,16 +39,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var replace_in_file_1 = __importDefault(require("replace-in-file"));
 var find_in_files_1 = __importDefault(require("find-in-files"));
 var fs_extra_1 = __importDefault(require("fs-extra"));
+var glob_1 = __importDefault(require("glob"));
 var inquirer_1 = __importDefault(require("inquirer"));
-var promisified_1 = require("./util/promisified");
-var helpers_1 = require("./util/helpers");
-var options_1 = require("./options");
+var replace_in_file_1 = __importDefault(require("replace-in-file"));
 var constants_1 = require("./constants");
+var options_1 = require("./options");
 var questions_1 = __importDefault(require("./questions"));
+var helpers_1 = require("./util/helpers");
 var log_1 = __importDefault(require("./util/log"));
+var promisified_1 = require("./util/promisified");
 function getTemplates() {
     return __awaiter(this, void 0, void 0, function () {
         var templates, err_1;
@@ -75,79 +76,56 @@ function getTemplates() {
 exports.getTemplates = getTemplates;
 function copyTemplateToTemporaryPath(_a) {
     var templatePath = _a.templatePath, temporaryCopyPath = _a.temporaryCopyPath;
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, promisified_1.copy(templatePath, temporaryCopyPath, { clobber: false })];
-                case 1:
-                    _b.sent();
-                    return [2 /*return*/];
-            }
-        });
-    });
+    return promisified_1.copy(templatePath, temporaryCopyPath, { clobber: false });
 }
 exports.copyTemplateToTemporaryPath = copyTemplateToTemporaryPath;
 function copyTemplateToFinalpath(_a) {
     var temporaryCopyPath = _a.temporaryCopyPath, finalCopyPath = _a.finalCopyPath;
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, promisified_1.copy(temporaryCopyPath, finalCopyPath, { clobber: false })];
-                case 1:
-                    _b.sent();
-                    return [2 /*return*/];
-            }
-        });
-    });
+    return promisified_1.copy(temporaryCopyPath, finalCopyPath, { clobber: false });
 }
 exports.copyTemplateToFinalpath = copyTemplateToFinalpath;
-function renameFiles(_a, variantsToRemove) {
+function renameFiles(_a, variantsToRemove, replacementStrings) {
     var template_rename = _a.template_rename, temporaryCopyPath = _a.temporaryCopyPath;
     return __awaiter(this, void 0, void 0, function () {
-        var stat, isDirectory, filePaths;
+        var stat, isDirectory, filePaths, error_1;
         return __generator(this, function (_b) {
             switch (_b.label) {
-                case 0: return [4 /*yield*/, promisified_1.stats(temporaryCopyPath)];
+                case 0:
+                    _b.trys.push([0, 6, , 7]);
+                    return [4 /*yield*/, promisified_1.stats(temporaryCopyPath)];
                 case 1:
                     stat = _b.sent();
                     isDirectory = stat.isDirectory();
                     if (!!isDirectory) return [3 /*break*/, 3];
-                    return [4 /*yield*/, findAndReplace(temporaryCopyPath, template_rename, variantsToRemove)];
+                    return [4 /*yield*/, findAndReplace(temporaryCopyPath, template_rename, variantsToRemove, replacementStrings)];
                 case 2: return [2 /*return*/, _b.sent()];
                 case 3: return [4 /*yield*/, getNestedFilePaths(temporaryCopyPath)];
                 case 4:
                     filePaths = _b.sent();
                     return [4 /*yield*/, Promise.all(filePaths.map(function (path) {
-                            return findAndReplace(path, template_rename, variantsToRemove);
+                            return findAndReplace(path, template_rename, variantsToRemove, replacementStrings);
                         }))];
                 case 5: return [2 /*return*/, _b.sent()];
+                case 6:
+                    error_1 = _b.sent();
+                    log_1.default.error('Error renaming files', error_1.message);
+                    return [3 /*break*/, 7];
+                case 7: return [2 /*return*/];
             }
         });
     });
 }
 exports.renameFiles = renameFiles;
-var getNestedFilePaths = function (dir, filelist) {
+var getNestedFilePaths = function (dir) {
     return __awaiter(this, void 0, void 0, function () {
-        var path, fs, files;
         return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    path = path || require('path');
-                    fs = fs || require('fs');
-                    return [4 /*yield*/, promisified_1.readdir(dir)];
-                case 1:
-                    files = _a.sent();
-                    filelist = filelist || [];
-                    files.forEach(function (file) {
-                        if (fs.statSync(path.join(dir, file)).isDirectory()) {
-                            filelist = getNestedFilePaths(path.join(dir, file), filelist);
-                        }
-                        else {
-                            filelist.push(path.join(dir, file));
-                        }
+            return [2 /*return*/, new Promise(function (resolve, reject) {
+                    glob_1.default(dir + '/**/*', function (error, response) {
+                        if (error)
+                            return reject(error);
+                        resolve(response.filter(function (path) { return /.+\..+/.test(path.split('/').reverse()[0]); }));
                     });
-                    return [2 /*return*/, filelist];
-            }
+                })];
         });
     });
 };
@@ -158,8 +136,8 @@ function removeOptional(fileName, name) {
                 case 0: return [4 /*yield*/, replace_in_file_1.default({
                         files: fileName,
                         from: helpers_1.getOptionalSnippetRegExp(name),
-                        to: ''
-                    })];
+                        to: '',
+                    }).catch(function (error) { return log_1.default.error(error.message); })];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];
@@ -178,8 +156,8 @@ function removeAllOptionalComments(fileName) {
                     return [4 /*yield*/, replace_in_file_1.default({
                             files: fileName,
                             from: regExp,
-                            to: ''
-                        })];
+                            to: '',
+                        }).catch(function (error) { return log_1.default.error(error.message); })];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];
@@ -188,63 +166,71 @@ function removeAllOptionalComments(fileName) {
     });
 }
 exports.removeAllOptionalComments = removeAllOptionalComments;
-function findAndReplace(path, replacement, variantsToRemove) {
+function findAndReplace(path, replacement, variantsToRemove, searchStrings) {
+    if (searchStrings === void 0) { searchStrings = {
+        default: 'PLACEHOLDER',
+        lower: 'LOWER_PLACEHOLDER',
+        upper: 'UPPER_PLACEHOLDER',
+        pascal: 'PASCAL_PLACEHOLDER',
+    }; }
     return __awaiter(this, void 0, void 0, function () {
-        var fileName, defaultReplacement, uppercaseReplacement, lowercaseReplacement, pascalcaseReplacement, error_1;
+        var fileNameRegExp, defaultRegExp, upperRegExp, lowerRegExp, pascalRegExp, fileName, replacements, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    fileName = path.replace(/PLACEHOLDER/i, replacement);
-                    if (!(path !== fileName)) return [3 /*break*/, 2];
-                    return [4 /*yield*/, promisified_1.rename(path, fileName)];
+                    fileNameRegExp = new RegExp(searchStrings.default + '(?=\\.)', 'i');
+                    defaultRegExp = new RegExp(searchStrings.default, 'g');
+                    upperRegExp = new RegExp(searchStrings.upper, 'g');
+                    lowerRegExp = new RegExp(searchStrings.lower, 'g');
+                    pascalRegExp = new RegExp(searchStrings.pascal, 'g');
+                    fileName = path.replace(fileNameRegExp, replacement);
+                    _a.label = 1;
                 case 1:
+                    _a.trys.push([1, 10, , 11]);
+                    if (!(path !== fileName)) return [3 /*break*/, 3];
+                    return [4 /*yield*/, promisified_1.rename(path, fileName)];
+                case 2:
                     _a.sent();
-                    _a.label = 2;
-                case 2: return [4 /*yield*/, helpers_1.sequencePromises(variantsToRemove.map(function (variant) { return function () { return removeOptional(fileName, variant); }; }))];
-                case 3:
-                    _a.sent();
-                    return [4 /*yield*/, removeAllOptionalComments(fileName)];
+                    _a.label = 3;
+                case 3: return [4 /*yield*/, helpers_1.sequencePromises(variantsToRemove.map(function (variant) { return function () { return removeOptional(fileName, variant); }; }))];
                 case 4:
                     _a.sent();
-                    defaultReplacement = replacement;
-                    uppercaseReplacement = replacement.toUpperCase();
-                    lowercaseReplacement = replacement.toLowerCase();
-                    pascalcaseReplacement = "" + replacement[0].toUpperCase() + replacement.substr(1);
-                    _a.label = 5;
+                    return [4 /*yield*/, removeAllOptionalComments(fileName)];
                 case 5:
-                    _a.trys.push([5, 10, , 11]);
+                    _a.sent();
+                    replacements = helpers_1.getStringCasings(replacement);
                     return [4 /*yield*/, replace_in_file_1.default({
                             files: fileName,
-                            from: /UPPER_PLACEHOLDER/g,
-                            to: uppercaseReplacement
+                            from: upperRegExp,
+                            to: replacements.upper,
                         })];
                 case 6:
                     _a.sent();
                     return [4 /*yield*/, replace_in_file_1.default({
                             files: fileName,
-                            from: /LOWER_PLACEHOLDER/g,
-                            to: lowercaseReplacement
+                            from: lowerRegExp,
+                            to: replacements.lower,
                         })];
                 case 7:
                     _a.sent();
                     return [4 /*yield*/, replace_in_file_1.default({
                             files: fileName,
-                            from: /PASCAL_PLACEHOLDER/g,
-                            to: pascalcaseReplacement
+                            from: pascalRegExp,
+                            to: replacements.pascal,
                         })];
                 case 8:
                     _a.sent();
                     return [4 /*yield*/, replace_in_file_1.default({
                             files: fileName,
-                            from: /PLACEHOLDER/g,
-                            to: defaultReplacement
+                            from: defaultRegExp,
+                            to: replacements.default,
                         })];
                 case 9:
                     _a.sent();
                     return [3 /*break*/, 11];
                 case 10:
-                    error_1 = _a.sent();
-                    console.log("Error replacing placeholder values: " + error_1);
+                    error_2 = _a.sent();
+                    log_1.default.error('Error replacing file names/values', error_2.message);
                     return [3 /*break*/, 11];
                 case 11: return [2 /*return*/];
             }
@@ -259,7 +245,7 @@ function removeFromFiles(files, regEx) {
                 case 0: return [4 /*yield*/, replace_in_file_1.default({
                         files: files,
                         from: regEx,
-                        to: ''
+                        to: '',
                     })];
                 case 1: return [2 /*return*/, _a.sent()];
             }
@@ -270,10 +256,12 @@ exports.removeFromFiles = removeFromFiles;
 function getTemplateOptionals(_a) {
     var tempDirectoryPath = _a.tempDirectoryPath;
     return __awaiter(this, void 0, void 0, function () {
-        var files, lines, templateOptionals;
+        var files, lines, templateOptionals, error_3;
         return __generator(this, function (_b) {
             switch (_b.label) {
-                case 0: return [4 /*yield*/, find_in_files_1.default.find('pastry-start', tempDirectoryPath, '.')];
+                case 0:
+                    _b.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, find_in_files_1.default.find('pastry-start', tempDirectoryPath, '.')];
                 case 1:
                     files = _b.sent();
                     lines = Object.values(files)
@@ -286,6 +274,11 @@ function getTemplateOptionals(_a) {
                         .map(function (words) { return words[1].trim(); })
                         .filter(Boolean);
                     return [2 /*return*/, Array.from(new Set(templateOptionals))];
+                case 2:
+                    error_3 = _b.sent();
+                    log_1.default.error('Error getting template optionals', error_3.message);
+                    return [3 /*break*/, 3];
+                case 3: return [2 /*return*/];
             }
         });
     });
@@ -293,29 +286,42 @@ function getTemplateOptionals(_a) {
 exports.getTemplateOptionals = getTemplateOptionals;
 function createOrRemoveTempDir() {
     return __awaiter(this, void 0, void 0, function () {
-        var tempDirExists;
+        var tempDirExists, error_4;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, promisified_1.exists(constants_1.tempDirectoryPath)];
+                case 0:
+                    _a.trys.push([0, 4, , 5]);
+                    return [4 /*yield*/, promisified_1.exists(constants_1.tempDirectoryPath)];
                 case 1:
                     tempDirExists = _a.sent();
                     if (!!tempDirExists) return [3 /*break*/, 3];
                     return [4 /*yield*/, promisified_1.mkdir(constants_1.tempDirectoryPath)];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    fs_extra_1.default.removeSync(constants_1.tempDirectoryPath);
-                    return [2 /*return*/];
+                    removePath(constants_1.tempDirectoryPath);
+                    return [3 /*break*/, 5];
+                case 4:
+                    error_4 = _a.sent();
+                    log_1.default.error('Error creating/removing temporary directory', error_4.message);
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
     });
 }
 exports.createOrRemoveTempDir = createOrRemoveTempDir;
+function removePath(path) {
+    fs_extra_1.default.removeSync(path);
+}
+exports.removePath = removePath;
 function getVariantsToRemove(answers) {
     return __awaiter(this, void 0, void 0, function () {
-        var availableTemplateVariants, variantsToRemove, selected_variants_1;
+        var availableTemplateVariants, variantsToRemove, selected_variants_1, error_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, getTemplateOptionals(answers)];
+                case 0:
+                    _a.trys.push([0, 4, , 5]);
+                    return [4 /*yield*/, getTemplateOptionals(answers)];
                 case 1:
                     availableTemplateVariants = _a.sent();
                     variantsToRemove = [];
@@ -326,6 +332,11 @@ function getVariantsToRemove(answers) {
                     variantsToRemove = availableTemplateVariants.filter(function (variant) { return !selected_variants_1.includes(variant); });
                     _a.label = 3;
                 case 3: return [2 /*return*/, variantsToRemove];
+                case 4:
+                    error_5 = _a.sent();
+                    log_1.default.error('Error getting available variants', error_5.message);
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
     });

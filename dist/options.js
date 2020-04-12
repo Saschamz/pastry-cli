@@ -9,12 +9,12 @@ function getUserConfig() {
     try {
         var config = require(process.cwd() + "/.pastryconfig.json");
         return {
-            templateDirPath: process.cwd() + '/' + (config.templateDir || 'pastries')
+            templateDirPath: process.cwd() + "/" + (config.templateDir || 'pastries'),
         };
     }
-    catch (err) {
+    catch (error) {
         return {
-            templateDirPath: process.cwd() + '/pastries'
+            templateDirPath: process.cwd() + "/pastries",
         };
     }
 }
@@ -24,21 +24,24 @@ function getOptions(rawArgs) {
         '--path': String,
         '--name': String,
         '--help': arg_1.default.COUNT,
+        '--rename': arg_1.default.COUNT,
         '-n': '--name',
         '-p': '--path',
         '-t': '--template',
-        '-h': '--help'
+        '-h': '--help',
+        '-r': '--rename',
     }, {
-        argv: rawArgs.slice(2)
+        argv: rawArgs.slice(2),
     });
     if (args['--help'] > 0) {
-        console.log("\n      --template | -b) Specify template name\n      --path | -p) Specify new relative path\n      --name |\u00A0-n) Specify new name\n      --help | -h) See all available arguments\n    ");
+        console.log("\n      --rename | -r) Rename existing pastry\n      --template | -b) Specify template name\n      --path | -p) Specify new relative path\n      --name |\u00A0-n) Specify new name\n      --help | -h) See all available arguments\n    ");
         process.exit(0);
     }
     return {
         template_name: args['--template'],
         copy_path_affix: args['--path'],
-        template_rename: args['--name']
+        template_rename: args['--name'],
+        rename_existing: args['--rename'],
     };
 }
 exports.getOptions = getOptions;
