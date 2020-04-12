@@ -53,13 +53,13 @@ The name of the directory will be used as `PLACEHOLDER` is used normally.
 
 ## Available arguments
 
-| Argument   | Shorthand | Description                 | Arguments |
-| ---------- | --------- | --------------------------- | --------- |
-| --name     | -n        | Define the new name         | name      |
-| --path     | -p        | Define the target path      | path      |
-| --template | -t        | Name of the template to use | name      |
-| --rename   | -r        | Rename existing             | none      |
-| --help     | -h        | List available arguments    | none      |
+| Argument   | Shorthand | Description                 |
+| ---------- | --------- | --------------------------- |
+| --name     | -n        | Define the new name         |
+| --path     | -p        | Define the target path      |
+| --template | -t        | Name of the template to use |
+| --rename   | -r        | Rename existing             |
+| --help     | -h        | List available arguments    |
 
 ## Configuration
 
