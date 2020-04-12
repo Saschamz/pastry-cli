@@ -4,3 +4,18 @@ export type StringCasings = {
   upper: string
   pascal: string
 }
+
+export type CLIOptions = {
+  template_name: string
+  template_rename: string
+  copy_path_affix: string
+  rename_existing: number
+  save_as_template: number
+}
+
+export type CLIAnswers = CLIOptions & {
+  templatePath: string
+  temporaryCopyPath: string
+  finalCopyPath: string
+  tempDirectoryPath: string
+}

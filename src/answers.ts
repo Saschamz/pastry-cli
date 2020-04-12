@@ -1,24 +1,11 @@
 import { tempDirectoryPath } from './constants'
 import { userConfig } from './options'
-
-export interface IOptions {
-  template_name: string
-  template_rename: string
-  copy_path_affix: string
-  rename_existing: number
-}
-
-export interface IAnswers extends IOptions {
-  templatePath: string
-  temporaryCopyPath: string
-  finalCopyPath: string
-  tempDirectoryPath: string
-}
+import { CLIAnswers, CLIOptions } from './types'
 
 export function calculateAnswers(
-  options: IOptions,
-  answersFromPrompt: IOptions
-): IAnswers {
+  options: CLIOptions,
+  answersFromPrompt: CLIOptions
+): CLIAnswers {
   const opts = {
     ...options,
     ...answersFromPrompt
@@ -38,6 +25,10 @@ export function calculateAnswers(
     }${fileExtension}`,
     temporaryCopyPath: `${tempDirectoryPath}/${opts.template_name}`,
     tempDirectoryPath
+  }
+
+  if (opts.save_as_template) {
+    // switch input dir and output dir
   }
 
   if (opts.rename_existing) {

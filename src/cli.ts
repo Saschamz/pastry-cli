@@ -1,5 +1,5 @@
 import inquirer from 'inquirer'
-import { calculateAnswers, IAnswers } from './answers'
+import { calculateAnswers } from './answers'
 import {
   copyTemplateToFinalpath,
   copyTemplateToTemporaryPath,
@@ -11,8 +11,10 @@ import {
 } from './main'
 import { getOptions } from './options'
 import questions from './questions'
+import { CLIAnswers } from './types'
 import { getStringCasings } from './util/helpers'
 import log from './util/log'
+import { copy } from './util/promisified'
 
 require('./util/prototypes')
 
@@ -25,12 +27,12 @@ export async function cli(rawArgs: string[]) {
   const prompts = []
   const templates = await getTemplates()
 
-  if (!options.template_rename) prompts.push(questions.template_rename)
-  if (!options.copy_path_affix) prompts.push(questions.copy_path_affix)
-
   if (!options.rename_existing) {
     if (!options.template_name) prompts.push(questions.template_name(templates))
   }
+
+  if (!options.template_rename) prompts.push(questions.template_rename)
+  if (!options.copy_path_affix) prompts.push(questions.copy_path_affix)
 
   const answersFromPrompt = await inquirer.prompt(prompts)
   const answers = calculateAnswers(options, answersFromPrompt)
@@ -40,7 +42,21 @@ export async function cli(rawArgs: string[]) {
   flow(answers)
 }
 
-export async function createFlow(answers: IAnswers) {
+export async function saveFlow(answers: CLIAnswers) {
+  try {
+    await createOrRemoveTempDir()
+    await copy(
+      process.cwd() + '/' + answers.copy_path_affix,
+      answers.tempDirectoryPath
+    )
+    await copyTemplateToFinalpath(answers)
+    await createOrRemoveTempDir()
+  } catch (error) {
+    log.error('Error saving pastry', error.message)
+  }
+}
+
+export async function createFlow(answers: CLIAnswers) {
   try {
     await createOrRemoveTempDir()
     await copyTemplateToTemporaryPath(answers)
@@ -55,7 +71,7 @@ export async function createFlow(answers: IAnswers) {
   }
 }
 
-export async function renameFlow(answers: IAnswers) {
+export async function renameFlow(answers: CLIAnswers) {
   const existingName = answers.copy_path_affix.split('/').reverse()[0]
   const searchStrings = getStringCasings(existingName)
 

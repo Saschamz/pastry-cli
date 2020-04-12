@@ -2,11 +2,10 @@ import findInFiles from 'find-in-files'
 import fsx from 'fs-extra'
 import inquirer from 'inquirer'
 import replace from 'replace-in-file'
-import { IAnswers } from './answers'
 import { tempDirectoryPath } from './constants'
 import { userConfig } from './options'
 import questions from './questions'
-import { StringCasings } from './types'
+import { CLIAnswers, StringCasings } from './types'
 import {
   getOptionalSnippetRegExp,
   getStringCasings,
@@ -29,14 +28,14 @@ export async function getTemplates() {
 export function copyTemplateToTemporaryPath({
   templatePath,
   temporaryCopyPath
-}: IAnswers) {
+}: CLIAnswers) {
   return copy(templatePath, temporaryCopyPath, { clobber: false })
 }
 
 export function copyTemplateToFinalpath({
   temporaryCopyPath,
   finalCopyPath
-}: IAnswers) {
+}: CLIAnswers) {
   return copy(temporaryCopyPath, finalCopyPath, { clobber: false })
 }
 
@@ -183,7 +182,7 @@ export async function removeFromFiles(files, regEx) {
 
 export async function getTemplateOptionals({
   tempDirectoryPath
-}: IAnswers): Promise<string[]> {
+}: CLIAnswers): Promise<string[]> {
   const files = await findInFiles.find('pastry-start', tempDirectoryPath, '.')
 
   const lines = Object.values(files)
@@ -210,7 +209,7 @@ export function removePath(path: string) {
   fsx.removeSync(path)
 }
 
-export async function getVariantsToRemove(answers: IAnswers) {
+export async function getVariantsToRemove(answers: CLIAnswers) {
   const availableTemplateVariants = await getTemplateOptionals(answers)
   let variantsToRemove = []
 
