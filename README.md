@@ -1,5 +1,7 @@
 # Pastry-CLI
 
+![A video showing pastry-cli](https://i.imgur.com/W9MGRDQ.mp4)
+
 This CLI aims to help speed up your workflow, guidelines and code reusability by adding support for pasting template building blocks.
 
 Since it's not related to any specific frameworks or languages it can be used everywhere and for anything with minimal setup and full control.
