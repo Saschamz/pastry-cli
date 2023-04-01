@@ -1,10 +1,9 @@
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -45,30 +44,33 @@ var glob_1 = __importDefault(require("glob"));
 var inquirer_1 = __importDefault(require("inquirer"));
 var replace_in_file_1 = __importDefault(require("replace-in-file"));
 var constants_1 = require("./constants");
-var options_1 = require("./options");
 var questions_1 = __importDefault(require("./questions"));
+var directoryFinders_1 = require("./util/directoryFinders");
 var helpers_1 = require("./util/helpers");
 var log_1 = __importDefault(require("./util/log"));
 var promisified_1 = require("./util/promisified");
 function getTemplates() {
     return __awaiter(this, void 0, void 0, function () {
-        var templates, err_1;
+        var path, templates, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, promisified_1.readdir(options_1.userConfig.templateDirPath)];
+                    _a.trys.push([0, 3, , 4]);
+                    return [4 /*yield*/, directoryFinders_1.getTemplatesDirectory()];
                 case 1:
+                    path = _a.sent();
+                    return [4 /*yield*/, promisified_1.readdir(path)];
+                case 2:
                     templates = _a.sent();
                     if (!templates.length)
                         throw Error;
-                    return [2 /*return*/, templates];
-                case 2:
+                    return [2 /*return*/, { templates: templates, path: path }];
+                case 3:
                     err_1 = _a.sent();
                     log_1.default.errorDirectoryOrFilesNotFound();
                     process.exit(1);
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
             }
         });
     });

@@ -4,39 +4,30 @@ import glob from 'glob'
 import inquirer from 'inquirer'
 import replace from 'replace-in-file'
 import { tempDirectoryPath } from './constants'
-import { userConfig } from './options'
 import questions from './questions'
 import { CLIAnswers, StringCasings } from './types'
-import {
-  getOptionalSnippetRegExp,
-  getStringCasings,
-  sequencePromises,
-} from './util/helpers'
+import { getTemplatesDirectory } from './util/directoryFinders'
+import { getOptionalSnippetRegExp, getStringCasings, sequencePromises } from './util/helpers'
 import log from './util/log'
 import { copy, exists, mkdir, readdir, rename, stats } from './util/promisified'
 
 export async function getTemplates() {
   try {
-    const templates = await readdir(userConfig.templateDirPath)
+    const path = await getTemplatesDirectory()
+    const templates = await readdir(path)
     if (!templates.length) throw Error
-    return templates
+    return { templates, path }
   } catch (err) {
     log.errorDirectoryOrFilesNotFound()
     process.exit(1)
   }
 }
 
-export function copyTemplateToTemporaryPath({
-  templatePath,
-  temporaryCopyPath,
-}: CLIAnswers) {
+export function copyTemplateToTemporaryPath({ templatePath, temporaryCopyPath }: CLIAnswers) {
   return copy(templatePath, temporaryCopyPath, { clobber: false })
 }
 
-export function copyTemplateToFinalpath({
-  temporaryCopyPath,
-  finalCopyPath,
-}: CLIAnswers) {
+export function copyTemplateToFinalpath({ temporaryCopyPath, finalCopyPath }: CLIAnswers) {
   return copy(temporaryCopyPath, finalCopyPath, { clobber: false })
 }
 
@@ -62,12 +53,7 @@ export async function renameFiles(
 
     return await Promise.all(
       filePaths.map((path: string) => {
-        return findAndReplace(
-          path,
-          template_rename,
-          variantsToRemove,
-          replacementStrings
-        )
+        return findAndReplace(path, template_rename, variantsToRemove, replacementStrings)
       })
     )
   } catch (error) {
@@ -79,9 +65,7 @@ const getNestedFilePaths = async function (dir: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
     glob(dir + '/**/*', (error, response) => {
       if (error) return reject(error)
-      resolve(
-        response.filter((path) => /.+\..+/.test(path.split('/').reverse()[0]))
-      )
+      resolve(response.filter(path => /.+\..+/.test(path.split('/').reverse()[0])))
     })
   })
 }
@@ -91,7 +75,7 @@ export async function removeOptional(fileName: string, name: string) {
     files: fileName,
     from: getOptionalSnippetRegExp(name),
     to: '',
-  }).catch((error) => log.error(error.message))
+  }).catch(error => log.error(error.message))
 }
 
 export async function removeAllOptionalComments(fileName: string) {
@@ -101,7 +85,7 @@ export async function removeAllOptionalComments(fileName: string) {
     files: fileName,
     from: regExp,
     to: '',
-  }).catch((error) => log.error(error.message))
+  }).catch(error => log.error(error.message))
 }
 
 export async function findAndReplace(
@@ -128,9 +112,7 @@ export async function findAndReplace(
       await rename(path, fileName)
     }
 
-    await sequencePromises(
-      variantsToRemove.map((variant) => () => removeOptional(fileName, variant))
-    )
+    await sequencePromises(variantsToRemove.map(variant => () => removeOptional(fileName, variant)))
 
     await removeAllOptionalComments(fileName)
 
@@ -172,9 +154,7 @@ export async function removeFromFiles(files, regEx) {
   })
 }
 
-export async function getTemplateOptionals({
-  tempDirectoryPath,
-}: CLIAnswers): Promise<string[]> {
+export async function getTemplateOptionals({ tempDirectoryPath }: CLIAnswers): Promise<string[]> {
   try {
     const files = await findInFiles.find('pastry-start', tempDirectoryPath, '.')
 
@@ -219,7 +199,7 @@ export async function getVariantsToRemove(answers: CLIAnswers) {
         questions.selected_variants(availableTemplateVariants)
       )
       variantsToRemove = availableTemplateVariants.filter(
-        (variant) => !selected_variants.includes(variant)
+        variant => !selected_variants.includes(variant)
       )
     }
 

@@ -1,5 +1,4 @@
 import chalk from 'chalk'
-import { userConfig } from '../options'
 
 export default {
   welcome: () => console.log(chalk.magentaBright('🎂 Pastry')),
@@ -11,6 +10,6 @@ export default {
   errorDirectoryOrFilesNotFound: () =>
     console.error(
       chalk.red.bold('🎂 ERROR'),
-      `Could not find directory OR files inside of directory ${userConfig.templateDirPath}`
-    )
+      `Could not find directory or files inside of the project. Make sure they are placed at the root of your project.`
+    ),
 }

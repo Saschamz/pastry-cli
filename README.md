@@ -12,9 +12,13 @@ Install globally with npm `npm i -g pastry-cli` or yarn `yarn global add pastry-
 
 1. Create a `/pastries` directory in your project source directory.
 2. Populate the directory with template files/folders.
-3. run `pastry` inside your terminal while located inside your project source directory.
+3. Run `pastry` inside your terminal while located inside your project.
 
 The cli will guide you through the rest of the steps.
+
+It will look up for a `/pastries` directory starting from your `cwd`.
+
+This means that you can have default pastries for all projects by placing them in a parent directory.
 
 ## Name replacement
 
@@ -67,17 +71,6 @@ Configuration can be done by creating a `.pastryconfig.json` in the root directo
 
 ```json
 {
-  "templateDir": "{YOUR_TEMPLATE_DIRECTORY}" // default = pastries
+  "templateDir": "{YOUR_TEMPLATE_DIRECTORY}" // default: pastries
 }
 ```
-
-## Roadmap (help wanted)
-
-- [x] Improved error handling/messages
-- [x] Types for everything
-- [x] Rename existing feature
-- [ ] Save as pastry feature
-- [ ] More configuration options
-- [ ] Support for using pastry from any directory inside a project
-- [ ] Support for using remote pastries hosted on github
-- [ ] Refactor architecture to use features as modules

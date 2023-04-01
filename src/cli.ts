@@ -24,7 +24,7 @@ export async function cli(rawArgs: string[]) {
 
   const options = getOptions(rawArgs)
   const prompts = []
-  const templates = await getTemplates()
+  const { templates, path } = await getTemplates()
 
   if (!options.rename_existing) {
     if (!options.template_name) prompts.push(questions.template_name(templates))
@@ -34,8 +34,7 @@ export async function cli(rawArgs: string[]) {
   if (!options.copy_path_affix) prompts.push(questions.copy_path_affix)
 
   const answersFromPrompt = await inquirer.prompt(prompts)
-  const answers = calculateAnswers(options, answersFromPrompt)
-
+  const answers = calculateAnswers(options, answersFromPrompt, path)
   const flow = options.rename_existing ? renameFlow : createFlow
 
   flow(answers)

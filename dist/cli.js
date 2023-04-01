@@ -1,10 +1,9 @@
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -50,16 +49,16 @@ require('./util/prototypes');
 inquirer_1.default.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 function cli(rawArgs) {
     return __awaiter(this, void 0, void 0, function () {
-        var options, prompts, templates, answersFromPrompt, answers, flow;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var options, prompts, _a, templates, path, answersFromPrompt, answers, flow;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
                     log_1.default.welcome();
                     options = options_1.getOptions(rawArgs);
                     prompts = [];
                     return [4 /*yield*/, main_1.getTemplates()];
                 case 1:
-                    templates = _a.sent();
+                    _a = _b.sent(), templates = _a.templates, path = _a.path;
                     if (!options.rename_existing) {
                         if (!options.template_name)
                             prompts.push(questions_1.default.template_name(templates));
@@ -70,8 +69,8 @@ function cli(rawArgs) {
                         prompts.push(questions_1.default.copy_path_affix);
                     return [4 /*yield*/, inquirer_1.default.prompt(prompts)];
                 case 2:
-                    answersFromPrompt = _a.sent();
-                    answers = answers_1.calculateAnswers(options, answersFromPrompt);
+                    answersFromPrompt = _b.sent();
+                    answers = answers_1.calculateAnswers(options, answersFromPrompt, path);
                     flow = options.rename_existing ? renameFlow : createFlow;
                     flow(answers);
                     return [2 /*return*/];

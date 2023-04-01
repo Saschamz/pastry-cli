@@ -9,12 +9,12 @@ function getUserConfig() {
     try {
         var config = require(process.cwd() + "/.pastryconfig.json");
         return {
-            templateDirPath: process.cwd() + "/" + (config.templateDir || 'pastries'),
+            templateDirName: config.templateDir || 'pastries',
         };
     }
     catch (error) {
         return {
-            templateDirPath: process.cwd() + "/pastries",
+            templateDirName: 'pastries',
         };
     }
 }

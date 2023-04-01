@@ -12,15 +12,11 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var constants_1 = require("./constants");
-var options_1 = require("./options");
-function calculateAnswers(options, answersFromPrompt) {
-    var opts = __assign(__assign({}, options), answersFromPrompt);
+function calculateAnswers(options, answersFromPrompt, templatesPath) {
+    var opts = __assign({}, options, answersFromPrompt);
     var fileExtension = (opts.template_name || '').split('.');
-    fileExtension =
-        fileExtension.length === 1
-            ? ''
-            : "." + fileExtension[fileExtension.length - 1];
-    var answers = __assign(__assign({}, opts), { templatePath: options_1.userConfig.templateDirPath + "/" + opts.template_name, finalCopyPath: process.cwd() + "/" + opts.copy_path_affix + "/" + opts.template_rename + fileExtension, temporaryCopyPath: constants_1.tempDirectoryPath + "/" + opts.template_name, tempDirectoryPath: constants_1.tempDirectoryPath });
+    fileExtension = fileExtension.length === 1 ? '' : "." + fileExtension[fileExtension.length - 1];
+    var answers = __assign({}, opts, { templatePath: templatesPath + "/" + opts.template_name, finalCopyPath: process.cwd() + "/" + opts.copy_path_affix + "/" + opts.template_rename + fileExtension, temporaryCopyPath: constants_1.tempDirectoryPath + "/" + opts.template_name, tempDirectoryPath: constants_1.tempDirectoryPath });
     if (opts.rename_existing) {
         var existingName = answers.copy_path_affix.split('/').reverse()[0];
         answers.templatePath = process.cwd() + "/" + opts.copy_path_affix;

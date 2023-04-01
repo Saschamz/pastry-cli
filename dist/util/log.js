@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var chalk_1 = __importDefault(require("chalk"));
-var options_1 = require("../options");
 exports.default = {
     welcome: function () { return console.log(chalk_1.default.magentaBright('🎂 Pastry')); },
     success: function (template_rename) {
@@ -21,6 +20,6 @@ exports.default = {
         return console.error(chalk_1.default.red.apply(chalk_1.default, reasons));
     },
     errorDirectoryOrFilesNotFound: function () {
-        return console.error(chalk_1.default.red.bold('🎂 ERROR'), "Could not find directory OR files inside of directory " + options_1.userConfig.templateDirPath);
-    }
+        return console.error(chalk_1.default.red.bold('🎂 ERROR'), "Could not find directory or files inside of the project. Make sure they are placed at the root of your project.");
+    },
 };

@@ -1,10 +1,10 @@
 import { tempDirectoryPath } from './constants'
-import { userConfig } from './options'
 import { CLIAnswers, CLIOptions } from './types'
 
 export function calculateAnswers(
   options: CLIOptions,
-  answersFromPrompt: CLIOptions
+  answersFromPrompt: CLIOptions,
+  templatesPath: string
 ): CLIAnswers {
   const opts = {
     ...options,
@@ -12,14 +12,11 @@ export function calculateAnswers(
   }
 
   let fileExtension: string | string[] = (opts.template_name || '').split('.')
-  fileExtension =
-    fileExtension.length === 1
-      ? ''
-      : `.${fileExtension[fileExtension.length - 1]}`
+  fileExtension = fileExtension.length === 1 ? '' : `.${fileExtension[fileExtension.length - 1]}`
 
   const answers = {
     ...opts,
-    templatePath: `${userConfig.templateDirPath}/${opts.template_name}`,
+    templatePath: `${templatesPath}/${opts.template_name}`,
     finalCopyPath: `${process.cwd()}/${opts.copy_path_affix}/${
       opts.template_rename
     }${fileExtension}`,
@@ -38,9 +35,7 @@ export function calculateAnswers(
     p1.reverse()
     const p2 = p1.join('')
 
-    answers.finalCopyPath = `${process.cwd()}/${p2}/${
-      opts.template_rename
-    }${fileExtension}`
+    answers.finalCopyPath = `${process.cwd()}/${p2}/${opts.template_rename}${fileExtension}`
   }
 
   return answers

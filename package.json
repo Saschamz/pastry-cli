@@ -9,8 +9,9 @@
   },
   "scripts": {
     "start": "ts-node src",
-    "build": "tsc",
-    "deploy": "tsc && npm publish"
+    "build": "npx tsc",
+    "deploy": "npm run build && npm publish",
+    "link": "npm run build && npm link"
   },
   "homepage": "https://github.com/Saschamz/pastry-cli",
   "author": "Sascha Ringström",
@@ -32,6 +33,7 @@
     "chalk": "^2.4.2",
     "esm": "^3.2.25",
     "find-in-files": "^0.5.0",
+    "find-up": "^5.0.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
     "inquirer": "^6.3.1",
