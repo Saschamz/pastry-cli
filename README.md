@@ -1,14 +1,24 @@
 # Pastry-CLI
 
-![A gif showing pastry-cli](https://imgur.com/p2JNoZN.gif)
-
 This CLI aims to help speed up your workflow, guidelines and code reusability by adding support for pasting template building blocks.
 
-Since it's not related to any specific frameworks or languages it can be used everywhere and for anything with minimal setup and full control.
+Since it's language agnostic it can be used anywhere with minimal setup.
+
+![A gif showing pastry-cli](https://imgur.com/p2JNoZN.gif)
 
 ## Installation
 
-Install globally with npm `npm i -g pastry-cli` or yarn `yarn global add pastry-cli`
+Install with NPM:
+
+```bash
+npm i -g pastry-cli
+```
+
+Install with Yarn:
+
+```bash
+yarn global add pastry-cli
+```
 
 ## Setup/Usage
 
