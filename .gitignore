@@ -1,0 +1,7 @@
+node_modules
+.DS*
+pastries
+.pastryconfig.json
+test
+src/__temp
+dist
