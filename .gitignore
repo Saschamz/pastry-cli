@@ -4,3 +4,4 @@ pastries
 .pastryconfig.json
 test
 src/__temp
+dist
