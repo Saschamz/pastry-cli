@@ -2,16 +2,12 @@ import { StringCasings } from '../types'
 
 export const sequencePromises = funcs =>
   funcs.reduce(
-    (promise, func) =>
-      promise.then(result => func().then(Array.prototype.concat.bind(result))),
+    (promise, func) => promise.then(result => func().then(Array.prototype.concat.bind(result))),
     Promise.resolve([])
   )
 
 export function getOptionalSnippetRegExp(name: string) {
-  return new RegExp(
-    `\/\/.+pastry-start.+${name}(.|\n)+\/\/.+pastry-end.+${name}`,
-    'igm'
-  )
+  return new RegExp(`\/\/.+pastry-start.+${name}(.|\n)+\/\/.+pastry-end.+${name}`, 'igm')
 }
 
 export function getStringCasings(str: string): StringCasings {
@@ -23,6 +19,6 @@ export function getStringCasings(str: string): StringCasings {
     default: str,
     upper,
     lower,
-    pascal
+    pascal,
   }
 }

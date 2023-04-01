@@ -17,4 +17,18 @@ export type CLIAnswers = CLIOptions & {
   temporaryCopyPath: string
   finalCopyPath: string
   tempDirectoryPath: string
+  isGist: boolean
+}
+
+export enum TemplateSource {
+  GIST = 'gist',
+  LOCAL = 'local',
+}
+
+export type GithubFile = {
+  filename: string
+  type: string
+  language: string
+  raw_url: string
+  size: number
 }

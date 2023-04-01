@@ -1,3 +1,4 @@
+import axios from 'axios'
 import findInFiles from 'find-in-files'
 import fsx from 'fs-extra'
 import glob from 'glob'
@@ -6,37 +7,79 @@ import replace from 'replace-in-file'
 import { tempDirectoryPath } from './constants'
 import { userConfig } from './options'
 import questions from './questions'
-import { CLIAnswers, StringCasings } from './types'
-import {
-  getOptionalSnippetRegExp,
-  getStringCasings,
-  sequencePromises,
-} from './util/helpers'
+import octokit from './services/octokit'
+import { CLIAnswers, GithubFile, StringCasings } from './types'
+import { getOptionalSnippetRegExp, getStringCasings, sequencePromises } from './util/helpers'
 import log from './util/log'
-import { copy, exists, mkdir, readdir, rename, stats } from './util/promisified'
+import { copy, exists, mkdir, readdir, rename, stats, writeFile } from './util/promisified'
 
-export async function getTemplates() {
+export async function getLocalTemplates() {
   try {
     const templates = await readdir(userConfig.templateDirPath)
-    if (!templates.length) throw Error
-    return templates
+    return templates.map(t => `📦 ${t}`)
   } catch (err) {
-    log.errorDirectoryOrFilesNotFound()
-    process.exit(1)
+    console.log('WIP ERROR FETCHING LOCAL TEMPLATES')
+    return []
   }
 }
 
-export function copyTemplateToTemporaryPath({
-  templatePath,
-  temporaryCopyPath,
-}: CLIAnswers) {
+// TODO: Implement remote template fetching
+// https://docs.github.com/en/rest/reference/gists#list-a-users-gists
+// https://api.github.com/users/saschamz/gists
+
+export async function fetchGistTemplate(username: string) {
+  try {
+    const { data } = await octokit.request('GET /users/{username}/gists', { username })
+
+    return data.map(t => ({ ...t, description: `⭐ ${t.description} (${username})` }))
+  } catch (err) {
+    console.log('WIP ERROR FETCHING GIST TEMPLATES')
+    return []
+  }
+}
+
+export async function getGistTemplates() {
+  const promises = userConfig.userGists.map(fetchGistTemplate)
+  const responses = (await Promise.all(promises)).flat()
+
+  return responses
+}
+
+export async function downloadGithubFilesToTemporaryPath(
+  answers: CLIAnswers,
+  files: Record<string, GithubFile>
+) {
+  const { copy_path_affix } = answers
+  const isMultipleFiles = Object.keys(files).length > 1
+  console.log('downloadGithubFilesToTemporaryPath', answers)
+  console.log('isMultipleFiles', isMultipleFiles)
+  const filesArr = Object.values(files)
+
+  const fetchActions = filesArr.map(file => axios.get(file.raw_url))
+  const responses = await Promise.all(fetchActions)
+  const filePathPrefix = isMultipleFiles
+    ? `${copy_path_affix}/${answers.template_name}`
+    : `${copy_path_affix}`
+
+  if (isMultipleFiles) {
+    await mkdir(filePathPrefix)
+  }
+
+  const writeActions = responses.map((file, index) => {
+    console.log('writing temp github file', `${filePathPrefix}/${filesArr[index].filename}`)
+    return writeFile(`${filePathPrefix}/${filesArr[index].filename}`, file.data, {
+      encoding: 'utf8',
+    })
+  })
+
+  return await Promise.all(writeActions)
+}
+
+export function copyTemplateToTemporaryPath({ templatePath, temporaryCopyPath }: CLIAnswers) {
   return copy(templatePath, temporaryCopyPath, { clobber: false })
 }
 
-export function copyTemplateToFinalpath({
-  temporaryCopyPath,
-  finalCopyPath,
-}: CLIAnswers) {
+export function copyTemplateToFinalpath({ temporaryCopyPath, finalCopyPath }: CLIAnswers) {
   return copy(temporaryCopyPath, finalCopyPath, { clobber: false })
 }
 
@@ -62,12 +105,7 @@ export async function renameFiles(
 
     return await Promise.all(
       filePaths.map((path: string) => {
-        return findAndReplace(
-          path,
-          template_rename,
-          variantsToRemove,
-          replacementStrings
-        )
+        return findAndReplace(path, template_rename, variantsToRemove, replacementStrings)
       })
     )
   } catch (error) {
@@ -79,9 +117,7 @@ const getNestedFilePaths = async function (dir: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
     glob(dir + '/**/*', (error, response) => {
       if (error) return reject(error)
-      resolve(
-        response.filter((path) => /.+\..+/.test(path.split('/').reverse()[0]))
-      )
+      resolve(response.filter(path => /.+\..+/.test(path.split('/').reverse()[0])))
     })
   })
 }
@@ -91,7 +127,7 @@ export async function removeOptional(fileName: string, name: string) {
     files: fileName,
     from: getOptionalSnippetRegExp(name),
     to: '',
-  }).catch((error) => log.error(error.message))
+  }).catch(error => log.error(error.message))
 }
 
 export async function removeAllOptionalComments(fileName: string) {
@@ -101,7 +137,7 @@ export async function removeAllOptionalComments(fileName: string) {
     files: fileName,
     from: regExp,
     to: '',
-  }).catch((error) => log.error(error.message))
+  }).catch(error => log.error(error.message))
 }
 
 export async function findAndReplace(
@@ -128,9 +164,7 @@ export async function findAndReplace(
       await rename(path, fileName)
     }
 
-    await sequencePromises(
-      variantsToRemove.map((variant) => () => removeOptional(fileName, variant))
-    )
+    await sequencePromises(variantsToRemove.map(variant => () => removeOptional(fileName, variant)))
 
     await removeAllOptionalComments(fileName)
 
@@ -172,9 +206,7 @@ export async function removeFromFiles(files, regEx) {
   })
 }
 
-export async function getTemplateOptionals({
-  tempDirectoryPath,
-}: CLIAnswers): Promise<string[]> {
+export async function getTemplateOptionals({ tempDirectoryPath }: CLIAnswers): Promise<string[]> {
   try {
     const files = await findInFiles.find('pastry-start', tempDirectoryPath, '.')
 
@@ -219,7 +251,7 @@ export async function getVariantsToRemove(answers: CLIAnswers) {
         questions.selected_variants(availableTemplateVariants)
       )
       variantsToRemove = availableTemplateVariants.filter(
-        (variant) => !selected_variants.includes(variant)
+        variant => !selected_variants.includes(variant)
       )
     }
 

@@ -28,18 +28,21 @@
   ],
   "license": "ISC",
   "dependencies": {
+    "@octokit/core": "^3.5.1",
     "arg": "^4.1.0",
+    "axios": "^0.24.0",
     "chalk": "^2.4.2",
     "esm": "^3.2.25",
     "find-in-files": "^0.5.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
-    "inquirer": "^6.3.1",
+    "inquirer": "^8.2.0",
     "inquirer-fuzzy-path": "^2.0.3",
     "ncp": "^2.0.0",
     "replace-in-file": "^4.1.0"
   },
   "devDependencies": {
+    "@octokit/request": "^5.6.2",
     "@types/glob": "^7.1.1",
     "@types/node": "^12.6.9",
     "ts-node": "^8.3.0",

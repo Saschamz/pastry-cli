@@ -1,23 +1,29 @@
 import arg from 'arg'
 import { CLIOptions } from './types'
 
-export interface IUserConfig {
+export type UserConfig = {
   templateDirPath: string
+  userGists: string[]
+}
+
+const DEFAULT_CONFIG: UserConfig = {
+  templateDirPath: `${process.cwd()}/pastries`,
+  userGists: [],
 }
 
 export const userConfig = getUserConfig()
 
-function getUserConfig(): IUserConfig {
+function getUserConfig(): UserConfig {
   try {
     const config = require(`${process.cwd()}/.pastryconfig.json`)
 
     return {
-      templateDirPath: `${process.cwd()}/${config.templateDir || 'pastries'}`,
+      ...DEFAULT_CONFIG,
+      ...config,
+      ...(config.templateDir && { templateDirPath: `${process.cwd()}/${config.templateDir}` }),
     }
   } catch (error) {
-    return {
-      templateDirPath: `${process.cwd()}/pastries`,
-    }
+    return DEFAULT_CONFIG
   }
 }
 
